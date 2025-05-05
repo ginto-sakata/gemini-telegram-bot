@@ -1,0 +1,630 @@
+# config/styles.yaml
+# Version 2.2 (Explicit Short Aliases) - COMPLETE
+# Added explicit `alias_short` for artists. User MUST fill this in manually.
+
+# ==============================================================================
+# Style Group Aliases -> Maps user input alias to a style_lists key
+# ==============================================================================
+style_group_aliases:
+  photo: photo_modifiers
+  digital: digital_art_terms
+  3d: d3_modifiers
+  game: d3_modifiers
+  anime: anime
+  comic: comic_styles
+  pixel: pixel_art_styles
+  vector: vector_art_styles
+  flat: vector_art_styles
+  craft: craft_styles
+  material: craft_styles
+  tattoo: tattoo_styles
+  media: specialized_imagery
+  vfx: specialized_imagery
+  drawing: drawing_painting_styles
+  painting: drawing_painting_styles
+
+# ==============================================================================
+# Reusable lists of style details (styles and artists)
+# ==============================================================================
+style_lists:
+  # --- ARTISTS LIST (Expanded) ---
+  # Added alias_short for explicit short name control - USER MUST FILL THESE IN
+  artists:
+    # Painters / Traditional
+    - { name: "Adolph Gottlieb", alias: "Адольф Готлиб", alias_short: "Готлиб", emoji: "🎨" }
+    - { name: "Albrecht Dürer", alias: "Альбрехт Дюрер", alias_short: "Дюрер", emoji: "✒️" }
+    - { name: "Alfred Sisley", alias: "Альфред Сислей", alias_short: "Сислей", emoji: "🎨" }
+    - { name: "Amedeo Modigliani", alias: "Амедео Модильяни", alias_short: "Модильяни", emoji: "🎨" }
+    - { name: "André Masson", alias: "Андре Массон", alias_short: "Массон", emoji: "🎨" }
+    - { name: "Artemisia Gentileschi", alias: "Артемизия Джентилески", alias_short: "Джентилески", emoji: "🎨" }
+    - { name: "Berthe Morisot", alias: "Берта Моризо", alias_short: "Моризо", emoji: "🎨" }
+    - { name: "Camille Pissarro", alias: "Камиль Писсарро", alias_short: "Писсарро", emoji: "🎨" }
+    - { name: "Caravaggio", alias: "Караваджо", alias_short: "Караваджо", emoji: "🎨" }
+    - { name: "Claude Monet", alias: "Клод Моне", alias_short: "Моне", emoji: "🎨" }
+    - { name: "Clyfford Still", alias: "Клиффорд Стилл", alias_short: "Стилл", emoji: "🎨" }
+    - { name: "Cy Twombly", alias: "Сай Твомбли", alias_short: "Твомбли", emoji: "🎨" }
+    - { name: "Diego Rivera", alias: "Диего Ривера", alias_short: "Ривера", emoji: "🎨" }
+    - { name: "Diego Velázquez", alias: "Диего Веласкес", alias_short: "Веласкес", emoji: "🎨" }
+    - { name: "Dorothea Tanning", alias: "Доротея Таннинг", alias_short: "Таннинг", emoji: "🎨" }
+    - { name: "Edgar Degas", alias: "Эдгар Дега", alias_short: "Дега", emoji: "🎨" }
+    - { name: "Edouard Manet", alias: "Эдуар Мане", alias_short: "Мане", emoji: "🎨" }
+    - { name: "Edvard Munch", alias: "Эдвард Мунк", alias_short: "Мунк", emoji: "🎨" }
+    - { name: "Egon Schiele", alias: "Эгон Шиле", alias_short: "Шиле", emoji: "🎨" }
+    - { name: "Eugène Delacroix", alias: "Эжен Делакруа", alias_short: "Делакруа", emoji: "🎨" }
+    - { name: "Fernand Léger", alias: "Фернан Леже", alias_short: "Леже", emoji: "🎨" }
+    - { name: "Francis Picabia", alias: "Франсис Пикабиа", alias_short: "Пикабиа", emoji: "🎨" }
+    - { name: "Franz Kline", alias: "Франц Клайн", alias_short: "Клайн", emoji: "🎨" }
+    - { name: "Frida Kahlo", alias: "Фрида Кало", alias_short: "Кало", emoji: "🎨" }
+    - { name: "Georges Braque", alias: "Жорж Брак", alias_short: "Брак", emoji: "🎨" }
+    - { name: "Georges Seurat", alias: "Жорж Сера", alias_short: "Сера", emoji: "🎨" }
+    - { name: "Georgia O’Keeffe", alias: "Джорджия О’Кифф", alias_short: "О’Кифф", emoji: "🌸" }
+    - { name: "Giorgio de Chirico", alias: "Джорджо де Кирико", alias_short: "Кирико", emoji: "🎨" }
+    - { name: "Gustav Klimt", alias: "Густав Климт", alias_short: "Климт", emoji: "🎨" }
+    - { name: "Gustave Courbet", alias: "Гюстав Курбе", alias_short: "Курбе", emoji: "🎨" }
+    - { name: "Helen Frankenthaler", alias: "Хелен Франкенталер", alias_short: "Франкенталер", emoji: "🎨" }
+    - { name: "Henri de Toulouse-Lautrec", alias: "Анри де Тулуз-Лотрек", alias_short: "Тулуз-Лотрек", emoji: "🎨" }
+    - { name: "Henri Matisse", alias: "Анри Матисс", alias_short: "Матисс", emoji: "🎨" }
+    - { name: "Jackson Pollock", alias: "Джексон Поллок", alias_short: "Поллок", emoji: "🎨" }
+    - { name: "James McNeill Whistler", alias: "Джеймс Уистлер", alias_short: "Уистлер", emoji: "🎨" }
+    - { name: "Joan Miró", alias: "Жоан Миро", alias_short: "Миро", emoji: "🎨" }
+    - { name: "Johannes Vermeer", alias: "Ян Вермеер", alias_short: "Вермеер", emoji: "🎨" }
+    - { name: "John Singer Sargent", alias: "Джон Сингер Сарджент", alias_short: "Сарджент", emoji: "🎨" }
+    - { name: "Juan Gris", alias: "Хуан Грис", alias_short: "Грис", emoji: "🎨" }
+    - { name: "Katsushika Hokusai", alias: "Кацусика Хокусай", alias_short: "Хокусай", emoji: "🇯🇵" }
+    - { name: "Kazimir Malevich", alias: "Казимир Малевич", alias_short: "Малевич", emoji: "🎨" }
+    - { name: "Leon Golub", alias: "Леон Голуб", alias_short: "Голуб", emoji: "🎨" }
+    - { name: "Leonardo da Vinci", alias: "Леонардо да Винчи", alias_short: "Леонардо", emoji: "🎨" }
+    - { name: "Leonora Carrington", alias: "Леонора Каррингтон", alias_short: "Каррингтон", emoji: "🎨" }
+    - { name: "Marc Chagall", alias: "Марк Шагал", alias_short: "Шагал", emoji: "🎨" }
+    - { name: "Mark Rothko", alias: "Марк Ротко", alias_short: "Ротко", emoji: "🎨" }
+    - { name: "Mary Cassatt", alias: "Мэри Кассат", alias_short: "Кассат", emoji: "🎨" }
+    - { name: "Max Ernst", alias: "Макс Эрнст", alias_short: "Эрнст", emoji: "🎨" }
+    - { name: "Meret Oppenheim", alias: "Мерет Оппенгейм", alias_short: "Оппенгейм", emoji: "🎨" }
+    - { name: "Michelangelo", alias: "Микеланджело", alias_short: "Микеланджело", emoji: "🗿" }
+    - { name: "Nancy Spero", alias: "Нэнси Сперо", alias_short: "Сперо", emoji: "🎨" }
+    - { name: "Oskar Kokoschka", alias: "Оскар Кокошка", alias_short: "Кокошка", emoji: "🎨" }
+    - { name: "Pablo Picasso", alias: "Пабло Пикассо", alias_short: "Пикассо", emoji: "🎨" }
+    - { name: "Paul Cézanne", alias: "Поль Сезанн", alias_short: "Сезанн", emoji: "🎨" }
+    - { name: "Paul Gauguin", alias: "Поль Гоген", alias_short: "Гоген", emoji: "🎨" }
+    - { name: "Paul Signac", alias: "Поль Синьяк", alias_short: "Синьяк", emoji: "🎨" }
+    - { name: "Peter Paul Rubens", alias: "Питер Пауль Рубенс", alias_short: "Рубенс", emoji: "🎨" }
+    - { name: "Philip Guston", alias: "Филипп Густон", alias_short: "Густон", emoji: "🎨" }
+    - { name: "Pierre Bonnard", alias: "Пьер Боннар", alias_short: "Боннар", emoji: "🎨" }
+    - { name: "Pierre-Auguste Renoir", alias: "Пьер Огюст Ренуар", alias_short: "Ренуар", emoji: "🎨" }
+    - { name: "Piet Mondrian", alias: "Пит Мондриан", alias_short: "Мондриан", emoji: "🎨" }
+    - { name: "Raphael", alias: "Рафаэль", alias_short: "Рафаэль", emoji: "🎨" }
+    - { name: "Rembrandt", alias: "Рембрандт", alias_short: "Рембрандт", emoji: "🎨" }
+    - { name: "René Magritte", alias: "Рене Магритт", alias_short: "Магритт", emoji: "🎨" }
+    - { name: "Salvador Dalí", alias: "Сальвадор Дали", alias_short: "Дали", emoji: "🎨" }
+    - { name: "Sandro Botticelli", alias: "Сандро Боттичелли", alias_short: "Боттичелли", emoji: "🎨" }
+    - { name: "Sonia Delaunay-Terk", alias: "Соня Делоне", alias_short: "Делоне", emoji: "🎨" }
+    - { name: "Utagawa Hiroshige", alias: "Утагава Хиросигэ", alias_short: "Хиросигэ", emoji: "🇯🇵" }
+    - { name: "Vincent van Gogh", alias: "Винсент ван Гог", alias_short: "Ван Гог", emoji: "🎨" } # Corrected multi-word
+    - { name: "Wassily Kandinsky", alias: "Василий Кандинский", alias_short: "Кандинский", emoji: "🎨" }
+    - { name: "Willem de Kooning", alias: "Виллем де Кунинг", alias_short: "де Кунинг", emoji: "🎨" } # Corrected multi-word
+    - { name: "Yves Tanguy", alias: "Ив Танги", alias_short: "Танги", emoji: "🎨" }
+    - { name: "Zdzisław Beksiński", alias: "Здзислав Бексиньский", alias_short: "Бексиньский", emoji: "🎨" }
+    # Sculptors / Installation / Conceptual
+    - { name: "Ai Weiwei", alias: "Ай Вэйвэй", alias_short: "Вэйвэй", emoji: "🗿" }
+    - { name: "Banksy", alias: "Бэнкси", alias_short: "Бэнкси", emoji: " स्प्रे" }
+    - { name: "Barnett Newman", alias: "Барнетт Ньюман", alias_short: "Ньюман", emoji: "🎨" } # Also painter
+    - { name: "Carl Andre", alias: "Карл Андре", alias_short: "Андре", emoji: "🗿" }
+    - { name: "Constantin Brancusi", alias: "Константин Бранкузи", alias_short: "Бранкузи", emoji: "🗿" }
+    - { name: "Dan Flavin", alias: "Дэн Флавин", alias_short: "Флавин", emoji: "💡" }
+    - { name: "Donald Judd", alias: "Дональд Джадд", alias_short: "Джадд", emoji: "🗿" }
+    - { name: "Ellsworth Kelly", alias: "Эллсуорт Келли", alias_short: "Келли", emoji: "🎨" } # Also painter
+    - { name: "Frank Stella", alias: "Фрэнк Стелла", alias_short: "Стелла", emoji: "🎨" } # Also painter
+    - { name: "Gian Lorenzo Bernini", alias: "Джованни Бернини", alias_short: "Бернини", emoji: "🗿" }
+    - { name: "Jasper Johns", alias: "Джаспер Джонс", alias_short: "Джонс", emoji: "🎨" } # Also painter
+    - { name: "Kenneth Noland", alias: "Кеннет Ноланд", alias_short: "Ноланд", emoji: "🎨" } # Also painter
+    - { name: "Marcel Duchamp", alias: "Марсель Дюшан", alias_short: "Дюшан", emoji: "🗿" }
+    - { name: "Richard Serra", alias: "Ричард Серра", alias_short: "Серра", emoji: "🗿" }
+    - { name: "Robert Smithson", alias: "Роберт Смитсон", alias_short: "Смитсон", emoji: "🗿" }
+    - { name: "Sol LeWitt", alias: "Сол Левитт", alias_short: "Левитт", emoji: "🎨" }
+    - { name: "Yayoi Kusama", alias: "Яеи Кусама", alias_short: "Кусама", emoji: "🇯🇵" }
+    # Modern / Pop / Street / Contemporary
+    - { name: "Andy Warhol", alias: "Энди Уорхол", alias_short: "Уорхол", emoji: "🖼️" }
+    - { name: "Jean-Michel Basquiat", alias: "Жан-Мишель Баския", alias_short: "Баския", emoji: "🎨" }
+    - { name: "Keith Haring", alias: "Кит Харинг", alias_short: "Харинг", emoji: "🎨" }
+    - { name: "Robert Rauschenberg", alias: "Роберт Раушенберг", alias_short: "Раушенберг", emoji: "🎨" }
+    - { name: "Takashi Murakami", alias: "Такаси Мураками", alias_short: "Мураками", emoji: "🇯🇵" }
+    # Photography
+    - { name: "Ansel Adams", alias: "Ансель Адамс", alias_short: "Адамс", emoji: "📸" }
+    - { name: "Diane Arbus", alias: "Диана Арбус", alias_short: "Арбус", emoji: "📸" }
+    - { name: "Henri Cartier-Bresson", alias: "Анри Картье-Брессон", alias_short: "Картье-Брессон", emoji: "📸" }
+    - { name: "Man Ray", alias: "Ман Рэй", alias_short: "Ман Рэй", emoji: "📸" }
+    - { name: "Robert Mapplethorpe", alias: "Роберт Мэпплторп", alias_short: "Мэпплторп", emoji: "📸" }
+    - { name: "Cindy Sherman", alias: "Синди Шерман", alias_short: "Шерман", emoji: "📸" }
+    - { name: "Helmut Newton", alias: "Хельмут Ньютон", alias_short: "Ньютон", emoji: "📸" }
+    - { name: "Annie Leibovitz", alias: "Энни Лейбовиц", alias_short: "Лейбовиц", emoji: "📸" }
+    # Design / Illustration / Film / Games
+    - { name: "H. R. Giger", alias: "Г. Р. Гигер", alias_short: "Гигер", emoji: "👽" }
+    - { name: "Hayao Miyazaki", alias: "Хаяо Миядзаки", alias_short: "Миядзаки", emoji: "🇯🇵" }
+    - { name: "Wes Anderson", alias: "Уэс Андерсон", alias_short: "Андерсон", emoji: "🎬" }
+    - { name: "Tim Burton", alias: "Тим Бертон", alias_short: "Бертон", emoji: "🎬" }
+    - { name: "Guillermo del Toro", alias: "Гильермо дель Торо", alias_short: "дель Торо", emoji: "🎬" }
+    - { name: "Yoshitaka Amano", alias: "Ёситака Амано", alias_short: "Амано", emoji: "🇯🇵" }
+    - { name: "Yoji Shinkawa", alias: "Ёдзи Синкава", alias_short: "Синкава", emoji: "🇯🇵" }
+    - { name: "Saul Bass", alias: "Сол Басс", alias_short: "Басс", emoji: "✏️" }
+    - { name: "Milton Glaser", alias: "Милтон Глейзер", alias_short: "Глейзер", emoji: "✏️" }
+    - { name: "Storm Thorgerson", alias: "Сторм Торгерсон", alias_short: "Торгерсон", emoji: "🖼️" }
+    # Comic Artists - Add alias_short
+    - { name: "Bill Sienkiewicz", alias: "Стиль Билла Сенкевича", alias_short: "Сенкевич", emoji: "✏️" }
+    - { name: "Chris Ware", alias: "Стиль Криса Уэра", alias_short: "Уэр", emoji: "✏️" }
+    - { name: "Frank Miller", alias: "Стиль Фрэнка Миллера", alias_short: "Миллер", emoji: "✏️" }
+    - { name: "Jack Kirby", alias: "Стиль Джека Кирби", alias_short: "Кирби", emoji: "✏️" }
+    - { name: "Mike Mignola", alias: "Стиль Майка Миньолы", alias_short: "Миньола", emoji: "✏️" }
+    - { name: "Moebius", alias: "Стиль Мебиуса", alias_short: "Мебиус", emoji: "✏️" }
+    - { name: "Steve Ditko", alias: "Стиль Стива Дитко", alias_short: "Дитко", emoji: "✏️" }
+
+  # --- PHOTO / REALISM ---
+  # (Keep existing styles - alias_short not typically needed)
+  photo_modifiers:
+    - { name: "cinematic lighting", alias: "Кино-свет" }
+    - { name: "dramatic lighting", alias: "Драматичный свет" }
+    - { name: "natural lighting", alias: "Естественный свет" }
+    - { name: "studio lighting", alias: "Студийный свет" }
+    - { name: "low key lighting", alias: "Низкий ключ" }
+    - { name: "high key lighting", alias: "Высокий ключ" }
+    - { name: "volumetric lighting", alias: "Объемный свет" }
+    - { name: "shot on IMAX 70mm film", alias: "Снято на IMAX 70мм" }
+    - { name: "shot on 16mm film", alias: "Снято на 16мм" }
+    - { name: "shot on 35mm film", alias: "Снято на 35мм" }
+    - { name: "vintage film", alias: "Винтажная пленка" }
+    - { name: "expired film", alias: "Просроченная пленка" }
+    - { name: "Polaroid", alias: "Полароид" }
+    - { name: "Instax", alias: "Instax" }
+    - { name: "Lomography", alias: "Ломография" }
+    - { name: "daguerreotype", alias: "Дагерротип" }
+    - { name: "autochrome", alias: "Автохром" }
+    - { name: "macro lens", alias: "Макро-объектив" }
+    - { name: "wide angle lens", alias: "Широкоугольник" }
+    - { name: "telephoto lens", alias: "Телеобъектив" }
+    - { name: "fisheye lens", alias: "Рыбий глаз" }
+    - { name: "tilt-shift", alias: "Тилт-шифт" }
+    - { name: "long exposure", alias: "Длинная выдержка" }
+    - { name: "motion blur", alias: "Размытие в движении" }
+    - { name: "double exposure effect", alias: "Двойная экспозиция" }
+    - { name: "infrared effect", alias: "Инфракрасный эффект" }
+    - { name: "X-ray effect", alias: "Рентген-эффект" }
+    - { name: "drone footage", alias: "Съемка с дрона" }
+    - { name: "satellite imagery", alias: "Спутниковый снимок" }
+    - { name: "depth of field", alias: "Глубина резкости" }
+    - { name: "shallow depth of field", alias: "Малая глубина" }
+    - { name: "deep depth of field", alias: "Большая глубина" }
+    - { name: "bokeh", alias: "Боке" }
+    - { name: "film grain", alias: "Зерно пленки" }
+    - { name: "lens flare", alias: "Блик объектива" }
+    - { name: "photorealistic", alias: "Фотореализм" }
+    - { name: "hyperrealistic", alias: "Гиперреализм" }
+
+  # --- DIGITAL ART ---
+  digital_art_terms:
+    - { name: "concept art", alias: "Концепт-арт" }
+    - { name: "character concept art", alias: "Концепт персонажа" }
+    - { name: "environment concept art", alias: "Концепт окружения" }
+    - { name: "matte painting", alias: "Мэт-пейнтинг" }
+    - { name: "speed painting", alias: "Спидпейнт" }
+    - { name: "digital illustration", alias: "Цифровая иллюстрация" }
+    - { name: "photobashed", alias: "Фотобаш" }
+    - { name: "digital airbrushing", alias: "Аэрография (цифр.)" }
+    - { name: "cel shading", alias: "Сел-шейдинг" }
+
+  # --- 3D / GAME RELATED ---
+  d3_modifiers:
+    - { name: "Unreal Engine 5 render", alias: "Рендер UE5" }
+    - { name: "Unity render", alias: "Рендер Unity" }
+    - { name: "Blender Cycles render", alias: "Рендер Cycles" }
+    - { name: "Blender Eevee render", alias: "Рендер Eevee" }
+    - { name: "Octane render", alias: "Рендер Octane" }
+    - { name: "Redshift render", alias: "Рендер Redshift" }
+    - { name: "V-Ray render", alias: "Рендер V-Ray" }
+    - { name: "Arnold render", alias: "Рендер Arnold" }
+    - { name: "Cinema 4D render", alias: "Рендер C4D" }
+    - { name: "Houdini simulation", alias: "Симуляция Houdini" }
+    - { name: "ZBrush sculpt", alias: "Скульптинг ZBrush" }
+    - { name: "Substance Painter texture", alias: "Текстуры Substance" }
+    - { name: "Voxel art style", alias: "Воксель-арт" }
+    - { name: "low-poly style", alias: "Лоу-поли" }
+    - { name: "high-poly model", alias: "Хай-поли" }
+    - { name: "wireframe render", alias: "Каркасный рендер" }
+    - { name: "clay render", alias: "Клэй-рендер" }
+    - { name: "ray-traced", alias: "Трассировка лучей" }
+    - { name: "global illumination", alias: "Глобальное освещение" }
+    - { name: "ambient occlusion", alias: "Ambient Occlusion" }
+    - { name: "isometric view", alias: "Изометрия" }
+    - { name: "orthographic view", alias: "Ортография" }
+    - { name: "top-down view", alias: "Вид сверху" }
+    - { name: "first-person view", alias: "Вид от 1-го лица" }
+    - { name: "cinematic game screenshot", alias: "Кино-скриншот" }
+    - { name: "game UI elements", alias: "Элементы UI игры" }
+    - { name: "game loading screen", alias: "Экран загрузки" }
+    - { name: "HUD display overlay", alias: "Оверлей HUD" }
+
+  # --- ANIMATION (WESTERN) ---
+  western_animation:
+    - { name: "Pixar style", alias: "Пиксар" }
+    - { name: "Classic Disney (Snow White)", alias: "Дисней (Классика)" }
+    - { name: "Modern Disney (Frozen)", alias: "Дисней (Современ.)" }
+    - { name: "DreamWorks style (Shrek)", alias: "DreamWorks" }
+    - { name: "Sony Animation (Spider-Verse)", alias: "Паучьи вселенные" }
+    - { name: "Illumination (Minions)", alias: "Миньоны" }
+    - { name: "Laika Studios (Coraline)", alias: "Лайка (Куклы)" }
+    - { name: "Aardman Animation (Wallace & Gromit)", alias: "Аардман (Пластилин)" }
+    - { name: "Blue Sky Studios (Ice Age)", alias: "Ледниковый период" }
+    - { name: "Looney Tunes style", alias: "Луни Тюнз" }
+    - { name: "Hanna-Barbera style", alias: "Ханна-Барбера" }
+    - { name: "Nickelodeon (SpongeBob)", alias: "Никелодеон" }
+    - { name: "Cartoon Network (Adventure Time)", alias: "Cartoon Network" }
+    - { name: "Adult Swim (Rick and Morty)", alias: "Adult Swim" }
+    - { name: "Tim Burton style", alias: "Тим Бертон" }
+    - { name: "South Park style", alias: "Саус Парк" }
+    - { name: "The Simpsons style", alias: "Симпсоны" }
+    - { name: "Family Guy style", alias: "Гриффины" }
+    - { name: "Archer style", alias: "Арчер" }
+    - { name: "Rubber Hose (1930s)", alias: "Резиновый Шланг (30е)" }
+    - { name: "UPA style (Mr. Magoo)", alias: "UPA стиль (50е)" }
+    - { name: "Rotoscoping", alias: "Ротоскопирование" }
+
+  # --- ANIME / MANGA (Expanded) ---
+  anime:
+    - { name: "Studio Ghibli style", alias: "Гибли" }
+    - { name: "Makoto Shinkai style", alias: "Макото Синкай" }
+    - { name: "Satoshi Kon style", alias: "Сатоси Кон" }
+    - { name: "Mamoru Oshii style", alias: "Мамору Осии" }
+    - { name: "MAPPA style (Jujutsu Kaisen)", alias: "MAPPA" }
+    - { name: "Kyoto Animation style (Violet Evergarden)", alias: "Kyoto Animation" }
+    - { name: "Ufotable style (Demon Slayer)", alias: "Ufotable" }
+    - { name: "Studio Trigger style (Kill la Kill)", alias: "Trigger" }
+    - { name: "Gainax style (Evangelion)", alias: "Gainax" }
+    - { name: "Sunrise style (Gundam)", alias: "Sunrise (Меха)" }
+    - { name: "Madhouse style (Death Note)", alias: "Madhouse" }
+    - { name: "Bones style (My Hero Academia)", alias: "Bones" }
+    - { name: "Production I.G style (Ghost in the Shell)", alias: "Production I.G" }
+    - { name: "Shonen anime style (Dragon Ball)", alias: "Сенен" }
+    - { name: "Shojo anime style (Sailor Moon)", alias: "Седзе" }
+    - { name: "Seinen anime style (Attack on Titan)", alias: "Сейнен" }
+    - { name: "Josei anime style", alias: "Дзесэй" }
+    - { name: "Kodomomuke anime style (Pokemon)", alias: "Кодомомукэ" }
+    - { name: "Chibi style", alias: "Чиби" }
+    - { name: "Mecha anime style", alias: "Меха" }
+    - { name: "Cyberpunk anime (Akira)", alias: "Киберпанк Аниме" }
+    - { name: "Kawaii aesthetic", alias: "Кавай" }
+    - { name: "Isekai anime style", alias: "Исекай" }
+    - { name: "Moe aesthetic (K-On!)", alias: "Моэ" }
+    - { name: "80s anime aesthetic", alias: "Аниме 80х" }
+    - { name: "90s anime aesthetic", alias: "Аниме 90х" }
+    - { name: "modern anime aesthetic", alias: "Аниме Современное" }
+    - { name: "anime key visual", alias: "Ключевой Арт Аниме" }
+    - { name: "anime screenshot", alias: "Скриншот Аниме" }
+
+  # --- COMICS / GRAPHIC NOVELS ---
+  comic_styles:
+    - { name: "classic American comic book (Golden Age)", alias: "Амер. комикс (Золотой век)" }
+    - { name: "Silver Age comic book style", alias: "Амер. комикс (Серебр. век)" }
+    - { name: "Bronze Age comic book style", alias: "Амер. комикс (Бронз. век)" }
+    - { name: "Modern Age comic book style", alias: "Амер. комикс (Современ.)" }
+    - { name: "European comic album (bande dessinée)", alias: "Европ. комикс (BD)" }
+    - { name: "ligne claire style (Tintin)", alias: "Чистая линия (Тинтин)" }
+    - { name: "manga style", alias: "Манга" }
+    - { name: "manga screen tones", alias: "Манга (скринтоны)" }
+    - { name: "manhwa style", alias: "Манхва" }
+    - { name: "webtoon style", alias: "Вебтун" }
+    - { name: "graphic novel", alias: "Графический роман" }
+    - { name: "ink wash style", alias: "Заливка тушью" }
+    - { name: "heavy inks style", alias: "Жирные чернила" }
+    - { name: "crosshatching", alias: "Штриховка" }
+    - { name: "indie comic zine", alias: "Инди-комикс" }
+    - { name: "underground comix", alias: "Андерграунд комикс" }
+    - { name: "Jack Kirby style", alias: "Стиль Джека Кирби" } # Use Artist instead
+    - { name: "Steve Ditko style", alias: "Стиль Стива Дитко" } # Use Artist instead
+    - { name: "Frank Miller style", alias: "Стиль Фрэнка Миллера" } # Use Artist instead
+    - { name: "Moebius style", alias: "Стиль Мебиуса" } # Use Artist instead
+    - { name: "Mike Mignola style", alias: "Стиль Майка Миньолы" } # Use Artist instead
+    - { name: "Bill Sienkiewicz style", alias: "Стиль Билла Сенкевича" } # Use Artist instead
+    - { name: "Chris Ware style", alias: "Стиль Криса Уэра" } # Use Artist instead
+
+  # --- PIXEL ART ---
+  pixel_art_styles:
+    - { name: "8-bit NES style", alias: "8-бит (NES)" }
+    - { name: "16-bit SNES style", alias: "16-бит (SNES)" }
+    - { name: "Commodore 64 style", alias: "Commodore 64" }
+    - { name: "ZX Spectrum style", alias: "ZX Spectrum" }
+    - { name: "Game Boy screen style", alias: "Экран Game Boy" }
+    - { name: "Neo Geo Pocket style", alias: "Neo Geo Pocket" }
+    - { name: "isometric pixel art", alias: "Изометрия (пиксель)" }
+    - { name: "modern detailed pixel art", alias: "Современный пиксель-арт" }
+    - { name: "pixel art sprite sheet", alias: "Спрайт-лист" }
+    - { name: "pixel sorting effect", alias: "Пиксель-сортировка" }
+
+  # --- VECTOR / FLAT / GRAPHIC DESIGN ---
+  vector_art_styles:
+    - { name: "flat design illustration", alias: "Плоский дизайн" }
+    - { name: "minimalist flat design", alias: "Минимализм (плоский)"}
+    - { name: "geometric vector art", alias: "Геометрический вектор" }
+    - { name: "abstract vector shapes", alias: "Абстрактный вектор" }
+    - { name: "gradient mesh vector", alias: "Градиентная сетка" }
+    - { name: "line art vector", alias: "Линейный вектор" }
+    - { name: "monoline vector illustration", alias: "Монолиния вектор" }
+    - { name: "corporate Memphis style", alias: "Корпоративный Мемфис" }
+    - { name: "Swiss Style graphic design", alias: "Швейцарский стиль" }
+    - { name: "Bauhaus graphic design", alias: "Баухаус дизайн" }
+    - { name: "Art Deco graphic design", alias: "Ар-деко дизайн" }
+    - { name: "vector logo design", alias: "Логотип (вектор)" }
+    - { name: "vector icon set", alias: "Иконки (вектор)" }
+    - { name: "infographic style", alias: "Инфографика стиль" }
+    - { name: "data visualization", alias: "Визуализация данных" }
+
+  # --- PHYSICAL MEDIA / CRAFTS / MATERIALS ---
+  craft_styles:
+    - { name: "claymation scene", alias: "Пластилиновая сцена" }
+    - { name: "stop-motion puppet", alias: "Кукольная анимация" }
+    - { name: "paper cutout animation", alias: "Бумажная анимация" }
+    - { name: "cross-stitch pattern", alias: "Вышивка крестом" }
+    - { name: "embroidery hoop art", alias: "Вышивка (пяльцы)" }
+    - { name: "knitted texture", alias: "Вязаная текстура" }
+    - { name: "crochet amigurumi", alias: "Амигуруми (вязание)" }
+    - { name: "patchwork quilt style", alias: "Пэчворк" }
+    - { name: "origami art", alias: "Оригами" }
+    - { name: "paper quilling art", alias: "Квиллинг" }
+    - { name: "stained glass window", alias: "Витраж" }
+    - { name: "mosaic tile art", alias: "Мозаика" }
+    - { name: "wood carving", alias: "Резьба по дереву" }
+    - { name: "metal engraving", alias: "Гравировка по металлу" }
+    - { name: "etched glass", alias: "Травленое стекло" }
+    - { name: "leather tooling", alias: "Тиснение по коже" }
+    - { name: "collage art", alias: "Коллаж" }
+    - { name: "assemblage art", alias: "Ассамбляж" }
+    - { name: "diorama", alias: "Диорама" }
+    - { name: "miniature model", alias: "Миниатюрная модель" }
+
+  # --- TATTOO STYLES ---
+  tattoo_styles:
+    - { name: "American traditional tattoo", alias: "Олдскул тату" }
+    - { name: "Neo-traditional tattoo", alias: "Нео-традишнл тату" }
+    - { name: "Japanese traditional (Irezumi)", alias: "Японская тату (Ирэдзуми)" }
+    - { name: "watercolor tattoo style", alias: "Акварель тату" }
+    - { name: "blackwork tattoo", alias: "Блэкворк тату" }
+    - { name: "dotwork tattoo", alias: "Дотворк тату" }
+    - { name: "linework tattoo", alias: "Лайнворк тату" }
+    - { name: "geometric tattoo", alias: "Геометрия тату" }
+    - { name: "tribal tattoo design", alias: "Трайбл тату" }
+    - { name: "Maori tattoo style (Tā moko)", alias: "Маори тату (Та-моко)" }
+    - { name: "Celtic knot tattoo", alias: "Кельтский узел тату" }
+    - { name: "biomechanical tattoo", alias: "Биомеханика тату" }
+    - { name: "realistic tattoo", alias: "Реализм тату" }
+    - { name: "portrait tattoo", alias: "Портрет тату" }
+    - { name: "sketch style tattoo", alias: "Скетч тату" }
+    - { name: "ignorant style tattoo", alias: "Игнорант стайл тату" }
+    - { name: "tattoo flash sheet", alias: "Тату-флеш" }
+
+  # --- SPECIALIZED IMAGERY / MEDIA EMULATION ---
+  specialized_imagery:
+    - { name: "night vision effect", alias: "Ночное видение" }
+    - { name: "thermal vision image", alias: "Тепловизор" }
+    - { name: "security camera footage", alias: "Запись с камеры" }
+    - { name: "CCTV timestamp overlay", alias: "Время с CCTV" }
+    - { name: "VHS tape recording", alias: "VHS запись" }
+    - { name: "VHS static and tracking lines", alias: "VHS помехи" }
+    - { name: "damaged VHS effect", alias: "Поврежденная VHS" }
+    - { name: "DVD menu screen", alias: "Меню DVD" }
+    - { name: "Betamax recording", alias: "Betamax запись" }
+    - { name: "Super 8 film", alias: "Пленка Super 8" }
+    - { name: "old CRT screen display", alias: "ЭЛТ-экран" }
+    - { name: "scan lines effect", alias: "Скан-линии" }
+    - { name: "glitch art", alias: "Глитч-арт" }
+    - { name: "datamoshing effect", alias: "Датамошинг" }
+    - { name: "vaporwave aesthetic", alias: "Вейпорвейв" }
+    - { name: "synthwave aesthetic", alias: "Синтвейв" }
+    - { name: "holographic effect", alias: "Голограмма" }
+    - { name: "anaglyph 3D effect (red/cyan)", alias: "Анаглиф 3D" }
+    - { name: "lenticular print effect", alias: "Лентикуляр" }
+    - { name: "blueprint drawing", alias: "Чертеж (синька)" }
+    - { name: "technical schematic", alias: "Тех. схема" }
+    - { name: "patent drawing", alias: "Патентный чертеж" }
+    - { name: "exploded view diagram", alias: "Взрыв-схема" }
+    - { name: "architectural sketch", alias: "Архитектурный эскиз" }
+    - { name: "fantasy map (Tolkien style)", alias: "Фэнтези-карта (Толкин)" }
+    - { name: "vintage atlas map", alias: "Старинный атлас" }
+    - { name: "topographic map", alias: "Топограф. карта"}
+    - { name: "subway map diagram", alias: "Схема метро" }
+    - { name: "album cover art (rock)", alias: "Обложка альбома (Рок)" }
+    - { name: "album cover art (jazz)", alias: "Обложка альбома (Джаз)" }
+    - { name: "album cover art (electronic)", alias: "Обложка альбома (Электро)" }
+    - { name: "album cover art (hip-hop)", alias: "Обложка альбома (Хип-хоп)" }
+    - { name: "vinyl record with sleeve", alias: "Виниловая пластинка" }
+    - { name: "book cover design", alias: "Обложка книги" }
+    - { name: "vintage movie poster", alias: "Постер (винтаж)" }
+    - { name: "propaganda poster", alias: "Пропаг. плакат" }
+    - { name: "neon sign", alias: "Неоновая вывеска" }
+    - { name: "graffiti street art", alias: "Граффити" }
+    - { name: "chalkboard drawing", alias: "Рисунок мелом" }
+    - { name: "microscopic view", alias: "Микроскоп" }
+    - { name: "electron microscope image", alias: "Эл. микроскоп" }
+    - { name: "telescope view (Hubble style)", alias: "Телескоп (Хаббл)" }
+    - { name: "Rorschach inkblot test", alias: "Тест Роршаха" }
+
+  # --- DRAWING / PAINTING STYLES (General) ---
+  drawing_painting_styles:
+    - { name: "sketch", alias: "Скетч / Набросок" }
+    - { name: "pencil sketch", alias: "Карандашный скетч" }
+    - { name: "charcoal sketch", alias: "Угольный скетч" }
+    - { name: "ink drawing", alias: "Рисунок тушью" }
+    - { name: "ballpoint pen drawing", alias: "Рисунок ручкой" }
+    - { name: "watercolor painting", alias: "Акварель" }
+    - { name: "oil painting", alias: "Масляная живопись" }
+    - { name: "acrylic painting", alias: "Акрил" }
+    - { name: "gouache painting", alias: "Гуашь" }
+    - { name: "pastel drawing", alias: "Пастель" }
+    - { name: "impasto painting", alias: "Импасто" }
+    - { name: "sfumato technique", alias: "Сфумато" }
+    - { name: "chiaroscuro technique", alias: "Кьяроскуро" }
+    - { name: "pointillism", alias: "Пуантилизм" }
+    - { name: "impressionism", alias: "Импрессионизм" }
+    - { name: "expressionism", alias: "Экспрессионизм" }
+    - { name: "surrealism", alias: "Сюрреализм" }
+    - { name: "cubism", alias: "Кубизм" }
+    - { name: "abstract art", alias: "Абстракционизм" }
+    - { name: "minimalism", alias: "Минимализм" }
+    - { name: "maximalism", alias: "Максимализм" }
+    - { name: "naive art", alias: "Наивное искусство" }
+    - { name: "folk art", alias: "Народное искусство" }
+    - { name: "ukiyo-e woodblock print", alias: "Укие-э" }
+
+
+# ==============================================================================
+# Define the main types AND map them to the style lists
+# ==============================================================================
+main_type_mappings:
+  type_photo: # 1
+    name: "photorealistic photo"
+    alias: "Фото"
+    emoji: "📷"
+    style_keys: [photo_modifiers, specialized_imagery]
+  type_digital_art: # 2
+    name: "digital art painting"
+    alias: "Цифровой арт"
+    emoji: "🖼️"
+    style_keys: [digital_art_terms, drawing_painting_styles, photo_modifiers, western_animation, anime, comic_styles, vector_art_styles, pixel_art_styles, d3_modifiers, specialized_imagery, tattoo_styles, craft_styles] # Very broad
+  type_drawing_painting: # 3
+    name: "drawing/painting"
+    alias: "Рисунок/Живопись"
+    emoji: "🎨"
+    style_keys: [drawing_painting_styles, photo_modifiers, digital_art_terms, anime, comic_styles, craft_styles]
+  type_3d_render: # 4
+     name: "3d render"
+     alias: "3D Рендер"
+     emoji: "🧊"
+     style_keys: [d3_modifiers, photo_modifiers, specialized_imagery, craft_styles] # Added craft for models
+  type_anime_manga: # 5
+    name: "anime/manga drawing"
+    alias: "Аниме/Манга"
+    emoji: "🌸"
+    style_keys: [anime, comic_styles, drawing_painting_styles, digital_art_terms, pixel_art_styles]
+  type_game_asset: # 6
+    name: "game asset/render"
+    alias: "Игровой Ассет"
+    emoji: "🎮"
+    style_keys: [d3_modifiers, pixel_art_styles, digital_art_terms, photo_modifiers, vector_art_styles, specialized_imagery]
+  type_illustration: # 7
+    name: "illustration"
+    alias: "Иллюстрация"
+    emoji: "✏️"
+    style_keys: [digital_art_terms, drawing_painting_styles, vector_art_styles, comic_styles, anime, photo_modifiers, craft_styles, tattoo_styles]
+  type_sketch: # 8
+    name: "sketch"
+    alias: "Скетч/Набросок"
+    emoji: "✍️"
+    style_keys: [drawing_painting_styles, digital_art_terms, specialized_imagery, tattoo_styles]
+  type_comic_graphic_novel: # 9
+    name: "comic book panel / graphic novel page"
+    alias: "Комикс / Граф. роман"
+    emoji: "💥"
+    style_keys: [comic_styles, anime, drawing_painting_styles, digital_art_terms, vector_art_styles]
+  type_western_anim: # 10
+    name: "western animation scene"
+    alias: "Анимация (Запад)"
+    emoji: "🎬"
+    style_keys: [western_animation, craft_styles]
+  type_vector_design: # 11
+    name: "vector art / graphic design"
+    alias: "Вектор / Дизайн"
+    emoji: "📐"
+    style_keys: [vector_art_styles, specialized_imagery, pixel_art_styles]
+  type_pixel_art: # 12
+    name: "pixel art"
+    alias: "Пиксель-арт"
+    emoji: "👾"
+    style_keys: [pixel_art_styles, d3_modifiers]
+  type_craft_material: # 13
+    name: "craft / physical material"
+    alias: "Ремесло / Материал"
+    emoji: "🛠️"
+    style_keys: [craft_styles, photo_modifiers, western_animation, drawing_painting_styles]
+  type_tattoo: # 14
+    name: "tattoo design / flash"
+    alias: "Тату Дизайн"
+    emoji: "✒️"
+    style_keys: [tattoo_styles, drawing_painting_styles, comic_styles, vector_art_styles]
+  type_technical_drawing: # 15
+    name: "technical drawing / diagram"
+    alias: "Чертеж / Схема"
+    emoji: "🔩"
+    style_keys: [specialized_imagery, vector_art_styles, drawing_painting_styles]
+  type_media_emulation: # 16
+    name: "media emulation (VHS, Film, Screen)"
+    alias: "Эмуляция Медиа"
+    emoji: "📼"
+    style_keys: [specialized_imagery, photo_modifiers, pixel_art_styles]
+  type_typography: # 17
+    name: "typography design / lettering"
+    alias: "Типографика"
+    emoji: "🔤"
+    style_keys: [vector_art_styles, drawing_painting_styles, craft_styles, specialized_imagery, tattoo_styles]
+  type_sculpture: # 18
+    name: "sculpture / installation"
+    alias: "Скульптура / Инсталляция"
+    emoji: "🗿"
+    style_keys: [craft_styles, d3_modifiers, photo_modifiers]
+  type_food_photo: # 19
+    name: "food photography"
+    alias: "Фуд-фото"
+    emoji: "🍔"
+    style_keys: [photo_modifiers]
+  type_architecture: # 20
+    name: "architectural design / model"
+    alias: "Архитектура"
+    emoji: "🏗️"
+    style_keys: [drawing_painting_styles, d3_modifiers, photo_modifiers, vector_art_styles, specialized_imagery]
+  type_map: # 21
+    name: "map illustration"
+    alias: "Карта"
+    emoji: "🗺️"
+    style_keys: [specialized_imagery, vector_art_styles, drawing_painting_styles]
+  type_pattern_texture: # 22
+    name: "pattern / texture"
+    alias: "Паттерн / Текстура"
+    emoji: "✨"
+    style_keys: [vector_art_styles, craft_styles, drawing_painting_styles, d3_modifiers, specialized_imagery]
+  type_ui_ux: # 23
+    name: "UI/UX Mockup"
+    alias: "UI/UX Мокап"
+    emoji: "📱"
+    style_keys: [vector_art_styles, d3_modifiers, photo_modifiers]
+  type_logo: # 24
+    name: "logo design"
+    alias: "Логотип"
+    emoji: "🏷️"
+    style_keys: [vector_art_styles, drawing_painting_styles, craft_styles]
+  type_album_cover: # 25
+    name: "album cover art"
+    alias: "Обложка Альбома"
+    emoji: "🎵"
+    style_keys: [specialized_imagery, photo_modifiers, vector_art_styles, drawing_painting_styles, comic_styles, craft_styles, digital_art_terms]
+  type_poster: # 26
+    name: "poster design"
+    alias: "Постер / Плакат"
+    emoji: "📰"
+    style_keys: [vector_art_styles, photo_modifiers, drawing_painting_styles, comic_styles, specialized_imagery, digital_art_terms]
+  type_fashion_design: # 27
+    name: "fashion design sketch/photo"
+    alias: "Фэшн Дизайн"
+    emoji: "👗"
+    style_keys: [drawing_painting_styles, photo_modifiers, vector_art_styles]
+  type_graffiti: # 28
+    name: "graffiti street art"
+    alias: "Граффити"
+    emoji: "🎨"
+    style_keys: [specialized_imagery, drawing_painting_styles, vector_art_styles, tattoo_styles]
+  type_stained_glass: # 29
+    name: "stained glass window"
+    alias: "Витраж"
+    emoji: "🪟"
+    style_keys: [craft_styles, vector_art_styles, drawing_painting_styles]
+  type_neon_sign: # 30
+    name: "neon sign"
+    alias: "Неоновая Вывеска"
+    emoji: "💡"
+    style_keys: [specialized_imagery, photo_modifiers, vector_art_styles]
+
+# config/styles.yaml end

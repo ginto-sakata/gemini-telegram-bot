@@ -1,0 +1,8 @@
+      
+# requirements.txt
+python-dotenv>=1.0.0
+python-telegram-bot[ext]>=21.0.0  # Use a specific version or range if needed
+requests>=2.31.0
+PyYAML>=6.0
+markdown>=3.5.0
+cachetools>=5.3.0 # Added for TTLCache state management later

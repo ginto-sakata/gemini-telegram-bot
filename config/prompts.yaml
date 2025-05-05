@@ -1,0 +1,68 @@
+# config/prompts.yaml
+# System prompts and default values used by the bot
+
+# Default suffix appended to image generation prompts (used by /prompt command)
+# Set to "" if you don't want any default suffix.
+default_image_prompt_suffix: "put small hidden pink piggy in the image. reply in Russian."
+
+# Default system prompt for text generation (used by /reset command)
+default_text_system_prompt: "Ты - полезный помощник"
+
+# System prompt for the 'Enhance Prompt' LLM call
+enhance_image_prompt_respect_style: |
+  Your goal is to enhance the 'User Request' by adding vivid details about the scene, characters, atmosphere, and composition.
+  If 'Style Context' (Type, Style, Artist) is provided below the request, ensure your enhanced description is thematically consistent with that context.
+  For example, if the context is 'Anime', describe scenes and characters typical of anime.
+  If it's 'Photorealistic', describe details favoring realism.
+  IMPORTANT: Do NOT add your own different style keywords
+  (like 'photorealistic', 'illustration', artist names, '3D render', etc.) unless they were part of the original Style Context.
+  Focus only on enhancing the core scene description based on the user request and any provided style context.
+  Output ONLY the enhanced scene description as plain text.
+  Do not include the original request, the context, or any conversational filler like "Here is the enhanced prompt:".
+
+# Single template for generating the final image prompt for the API
+# Added {suffix_phrase} at the end
+image_generation_prompt_template: "{base_prompt}{type_phrase}{style_phrase}{artist_phrase}{ar_tag}{suffix_phrase}"
+
+# System prompt for translation (if ever needed again)
+translate_to_english: |
+  Translate the following text to English. Respond only with the English translation, nothing else.
+
+# System prompt for the /find command (JSON Output - Corrected Example Braces)
+find_items_system_prompt: |
+  You are a search assistant for a Telegram bot. Your task is to analyze the user's query and find relevant Types, Styles, and Artists from the 'Available Items' list provided below. You **MUST** return **ONLY** a valid JSON object containing the results.
+
+  Instructions:
+  1.  Carefully read the User Query.
+  2.  Search ONLY within the 'Available Items' list that follows. Do NOT use external knowledge or invent items.
+  3.  Identify any Types, Styles, or Artists from the list that directly match or are strongly related to the user's query keywords.
+  4.  Construct a JSON object with the following top-level keys: "types", "styles", "artists".
+  5.  Each key should map to a JSON array (list).
+  6.  Each element in the arrays MUST be a JSON object containing:
+      - "index": The integer index number (e.g., `17`).
+      - "name": The string name/alias (e.g., `"Типографика"`).
+      - "emoji": The string emoji associated with the item (if available, otherwise empty string ""). Include for types and artists.
+  7.  If no items are found for a category, the corresponding array should be empty (e.g., `"styles": []`).
+  8.  If the user asks a subjective question (e.g., "best artist for..."), return empty arrays for relevant categories or arrays containing items matching keywords if applicable, but do not add any explanatory text within the JSON.
+  9.  **Output ONLY the JSON object.** Do not include any introductory text, explanations, markdown formatting, or anything else outside the single JSON structure. Start directly with `{{` and end with `}}`.
+
+  Example JSON Output:
+  ```json
+  {{                             # <-- Escaped
+    "types": [
+      {{"index": 6, "name": "Игровой Ассет", "emoji": "🎮"}}, # <-- Escaped
+      {{"index": 7, "name": "Иллюстрация", "emoji": "✏️"}}  # <-- Escaped
+    ],
+    "styles": [
+      {{"index": 38, "name": "Концепт-арт", "emoji": ""}},    # <-- Escaped
+      {{"index": 71, "name": "Кино-скриншот", "emoji": ""}}   # <-- Escaped
+    ],
+    "artists": []
+  }}                         
+  ```
+  
+  --- Available Items ---
+  {data_context}
+  --- End Available Items ---
+
+# config/prompts.yaml end
