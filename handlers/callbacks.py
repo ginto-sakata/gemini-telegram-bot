@@ -24,7 +24,7 @@ from config import (
     ARTIST_NAME_TO_DATA, STYLE_NAME_TO_ABSOLUTE_INDEX, ARTIST_NAME_TO_ABSOLUTE_INDEX, DEFAULT_COMBINE_PROMPT_TEXT
 )
 import config
-from api.gemini_api import enhance_prompt_with_gemini
+from api.gemini_api import describe_image_with_gemini, enhance_prompt_with_gemini
 from ui.messages import update_caption_and_keyboard
 from handlers.image_gen import _initiate_image_generation, _initiate_image_editing
 from utils.prompt_helpers import get_style_detail
@@ -451,6 +451,72 @@ async def _handle_change_prompt_request(state: dict, context: ContextTypes.DEFAU
 # ================================== _handle_change_prompt_request() end ==================================
 
 
+# ================================== _handle_describe_img_prompt(): Describes current image and updates prompt ==================================
+async def _handle_describe_img_prompt(state: dict, context: ContextTypes.DEFAULT_TYPE, query: CallbackQuery) -> bool:
+    """
+    Handles the 'Describe Image' button click.
+    Describes the current image using the LLM and sets the result as the effective prompt.
+    """
+    if not query or not query.message or not query.message.photo:
+        logger.warning("Describe image called without proper message context (missing query/message/photo).")
+        try: await query.answer("⚠️ Ошибка: нет изображения для описания.", show_alert=True)
+        except Exception: pass # Ignore answer error
+        return False # No UI update needed if context is bad
+
+    await query.answer("🖼️ Описываю изображение...") # Acknowledge the callback
+
+    chat = query.message.chat
+    file_id_to_describe = state.get("generated_file_id")
+
+    if not file_id_to_describe:
+        logger.error(f"No generated_file_id found in state for message {query.message.message_id} to describe.")
+        try: await query.answer("⚠️ Ошибка: не найден ID файла изображения.", show_alert=True)
+        except Exception: pass # Ignore answer error
+        return False # No UI update needed if file_id is missing
+
+    image_bytes = None
+    try:
+        # Download the image bytes from Telegram/cache
+        # We don't need a separate status message in chat for this internal download
+        image_bytes = await get_cached_image_bytes(context, file_id_to_describe, chat)
+    except Exception as dl_exc:
+        logger.exception(f"Download error for description, file_id {file_id_to_describe}: {dl_exc}")
+        # Error message handled below if image_bytes is None
+
+    if not image_bytes:
+        logger.error(f"Failed to download image {file_id_to_describe} for description.")
+        try: await query.answer("❌ Ошибка загрузки изображения для описания.", show_alert=True)
+        except Exception: pass # Ignore answer error
+        return False # No UI update needed if download failed
+
+    # Call the API to describe the image
+    description, desc_error = await describe_image_with_gemini(image_bytes)
+
+    if desc_error:
+        logger.error(f"Image description error: {desc_error}")
+        try: await query.answer(f"⚠️ Ошибка описания: {desc_error[:150]}", show_alert=True)
+        except Exception: pass # Ignore answer error
+        return False # No UI update needed on description error
+
+    if description:
+        # Update the effective prompt in the state
+        state["effective_prompt"] = description.strip()
+        logger.info(f"Prompt for message {query.message.message_id} updated with image description.")
+
+        # Acknowledge success (optional, depends on desired feedback)
+        # await query.answer("✅ Изображение описано. Промпт обновлен.")
+
+        # Return True to indicate that the UI (caption and keyboard) needs to be updated
+        return True
+    else:
+        logger.warning(f"Image description returned no text for message {query.message.message_id}.")
+        try: await query.answer("ℹ️ Описание не вернуло текст.", show_alert=True)
+        except Exception: pass # Ignore answer error
+        return False # No UI update needed if description is empty
+
+# ================================== _handle_describe_img_prompt() end ==================================
+
+
 # ================================== _handle_enhance(): Enhances prompt via LLM ==================================
 async def _handle_enhance(state: dict, context: ContextTypes.DEFAULT_TYPE, query: CallbackQuery):
     await query.answer("✨ Улучшаю запрос...")
@@ -821,24 +887,28 @@ async def _handle_edit(state: dict, update: Update, context: ContextTypes.DEFAUL
 # ================================== _handle_edit() end ==================================
 
 
-# ================================== handle_callback_query(): Main callback query dispatcher ==================================
 async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Main dispatcher for all inline keyboard callback queries.
+    Parses the callback data, retrieves message state, and calls the
+    appropriate handler function based on the action.
+    """
     query = update.callback_query
     # Reminder: Use new line, not semicolon, for the following block/statement.
     if not query or not query.data or not query.message:
         logger.warning("Пустой callback query.")
-        return
+        return # Do nothing if the query is invalid
+
+    # Check authorization first
     # Reminder: Use new line, not semicolon, for the following block/statement.
     if not await is_authorized(update, context):
-        # Reminder: Use new line, not semicolon, for the following block/statement.
-        try:
-            await query.answer("❌ Нет прав.", show_alert=True)
-        # Reminder: Use new line, not semicolon, for the following block/statement.
-        except Exception:
-            pass
-        return
+        # is_authorized already sends a message/alert
+        return # Stop processing if unauthorized
+
     msg_id = query.message.message_id
     chat_id = query.message.chat_id
+    
+    # Parse the callback data string
     parsed_data = parse_callback_data(query.data)
     # Reminder: Use new line, not semicolon, for the following block/statement.
     if not parsed_data:
@@ -848,42 +918,56 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
             await query.answer("Ошибка обработки.", show_alert=True)
         # Reminder: Use new line, not semicolon, for the following block/statement.
         except Exception:
-            pass
-        return
+            pass # Ignore if answering fails
+        return # Stop if data is invalid
+
     action = parsed_data["action"]
     value = parsed_data["value"]
-    logger.debug(f"Callback: A='{action}', V='{value}', M={msg_id}, C={chat_id}")
+    logger.debug(f"Callback received: Action='{action}', Value='{value}', MsgID={msg_id}, ChatID={chat_id}")
+
+    # Retrieve the state for this message from bot_data (TTLCache)
     state_key = f"{IMAGE_STATE_CACHE_KEY_PREFIX}{chat_id}:{msg_id}"
     state = context.application.bot_data.get(state_key)
+
+    # Check if the state exists/hasn't expired
     # Reminder: Use new line, not semicolon, for the following block/statement.
     if not state:
-        logger.warning(f"Состояние {state_key} не найдено.")
+        logger.warning(f"Состояние для {state_key} не найдено или истекло.")
+        # Inform the user and remove the keyboard
         # Reminder: Use new line, not semicolon, for the following block/statement.
         try:
             await query.answer("⚠️ Состояние истекло.", show_alert=True)
         # Reminder: Use new line, not semicolon, for the following block/statement.
         except Exception:
-            pass
+            pass # Ignore answer error
         # Reminder: Use new line, not semicolon, for the following block/statement.
         try:
+            # Remove the inline keyboard as it's no longer functional
             await query.edit_message_reply_markup(reply_markup=None)
         # Reminder: Use new line, not semicolon, for the following block/statement.
-        except Exception:
-            pass
-        return
-    # Pre-answer non-blocking actions
+        except Exception as e_edit:
+            logger.warning(f"Не удалось удалить клавиатуру {msg_id}: {e_edit}")
+        return # Stop processing if state is missing
+
+    # Pre-answer non-blocking actions immediately for better responsiveness
+    # Actions like 'enhance', 'regen', 'edit', 'describe_img_prompt' might take time
+    # and their answer might be an alert or a status message, so they are handled later.
     # Reminder: Use new line, not semicolon, for the following block/statement.
-    if action not in ["enhance", "regen", "edit", "change_prompt_req"]:
+    if action not in ["enhance", "regen", "edit", "describe_img_prompt"]: # Added 'describe_img_prompt'
         # Reminder: Use new line, not semicolon, for the following block/statement.
         try:
             await query.answer()
         # Reminder: Use new line, not semicolon, for the following block/statement.
         except Exception:
             pass # Ignore if answering fails for simple toggles
-    needs_ui_update = True # Default assumption
+
+    needs_ui_update = True # Default assumption: most actions require UI update
+
+    # Dispatch action to the appropriate handler function
+    # Each handler function modifies the 'state' dictionary and returns
+    # True if the main UI (caption/keyboard) needs updating afterwards, False otherwise.
     # Reminder: Use new line, not semicolon, for the following block/statement.
     try:
-        # Reminder: Use new line, not semicolon, for the following block/statement.
         if action == "toggle_settings":
             _handle_toggle_settings(state)
         elif action == "show_ar":
@@ -934,50 +1018,72 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
             _handle_hide_prompt(state)
         elif action == "reset_prompt":
             _handle_reset_prompt(state)
-        elif action == "change_prompt_req":
-            # This action handles its own UI update potentially
-            needs_ui_update = await _handle_change_prompt_request(state, context, query)
+        
+        # --- Handle the new 'Describe Image' action ---
+        elif action == "describe_img_prompt":
+             # This handler returns False if it answers the query or True if it updates the prompt
+             needs_ui_update = await _handle_describe_img_prompt(state, context, query)
+        # --- End of new handler ---
+        
+        # The 'change_prompt_req' action is removed, so no handler needed here.
+
         elif action == "enhance":
-            # This action handles its own UI update potentially
+            # This handler returns False if it answers the query or True if it updates the prompt
             needs_ui_update = await _handle_enhance(state, context, query)
+
         elif action == "regen":
-            # This action now returns False if it handled the UI update
+            # This handler initiates a new message and updates the original, returns False
             needs_ui_update = await _handle_regen(state, update, context, query)
+
         elif action == "edit":
-            # This action now returns False if it handled the UI update
+            # This handler initiates a new message and updates the original, returns False
             needs_ui_update = await _handle_edit(state, update, context, query)
+
         elif action == "noop":
+            # This action is used for pagination placeholders, no UI update needed
             needs_ui_update = False
         else:
+            # Fallback for unknown actions
             logger.warning(f"Неизвестное действие: {action}")
+            # Inform the user
             # Reminder: Use new line, not semicolon, for the following block/statement.
             try:
                 await query.answer("Неизв. действие.")
             # Reminder: Use new line, not semicolon, for the following block/statement.
             except Exception:
-                pass
-            needs_ui_update = False
+                pass # Ignore answer error
+            needs_ui_update = False # No UI update needed for unknown action
+
     # Reminder: Use new line, not semicolon, for the following block/statement.
     except Exception as e:
-        logger.exception(f"Ошибка обработки '{action}': {e}")
+        # Catch any unexpected errors during action handling
+        logger.exception(f"Ошибка обработки callback действия '{action}': {e}")
+        # Inform the user about the error
         # Reminder: Use new line, not semicolon, for the following block/statement.
         try:
             await query.answer("❌ Ошибка.", show_alert=True)
         # Reminder: Use new line, not semicolon, for the following block/statement.
         except Exception:
-            pass
-        needs_ui_update = False # Don't update UI on error
-    # Save the potentially modified state (unless it was deleted on expiry check)
+            pass # Ignore answer error
+        needs_ui_update = False # Do not attempt to update UI on error
+
+    # Save the potentially modified state back to bot_data (TTLCache)
+    # This is important for persistence across bot restarts and for subsequent callbacks
+    # We re-check that 'state' is not None in case it was somehow set to None during handling (unlikely but safe)
     # Reminder: Use new line, not semicolon, for the following block/statement.
-    if state is not None: # Re-check state exists before saving
+    if state is not None:
         context.application.bot_data[state_key] = state
         logger.debug(f"State {state_key} updated in bot_data.")
-        # Conditionally update UI based on the handler's return value or default
-        # Reminder: Use new line, not semicolon, for the following block/statement.
-        if needs_ui_update:
-            await update_caption_and_keyboard(context, chat_id, msg_id)
-        else:
-            logger.debug(f"Skipping main UI update for action '{action}' on msg {msg_id}")
+
+    # Conditionally update the message's caption and keyboard
+    # This is done if the specific action handler returned True, or if it's a default action
+    # that wasn't handled by a specific function returning False.
+    # Reminder: Use new line, not semicolon, for the following block/statement.
+    if needs_ui_update:
+        await update_caption_and_keyboard(context, chat_id, msg_id)
+    else:
+        logger.debug(f"Skipping main UI update for action '{action}' on msg {msg_id}")
+
 # ================================== handle_callback_query() end ==================================
 
 
