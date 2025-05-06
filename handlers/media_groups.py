@@ -9,7 +9,7 @@ import asyncio
 from typing import Optional, Dict, Any
 from telegram import Update, Message, Chat
 from telegram.ext import ContextTypes, filters
-from telegram.constants import ParseMode
+from telegram.constants import ParseMode, ChatType
 from telegram.error import TelegramError
 from utils.auth import is_authorized
 from utils.cache import get_cached_image_bytes_by_id
@@ -124,27 +124,39 @@ async def process_media_group(context: ContextTypes.DEFAULT_TYPE):
     # Create a dummy source message object for _initiate_image_combination
     # We need a Message object primarily for the chat and message_id properties
     # that _determine_context inside _initiate_image_generation (called by combination) expects.
-    # We can fetch the chat object and create a minimal Message instance.
+    # We have chat_id, fmid (first message ID), and user_id from job_data.
     source_message_obj = None
     try:
+        # Fetch the chat object using chat_id from job_data
         chat_obj = await context.bot.get_chat(chat_id)
+        # Fetch the user object using user_id from job_data
+        user_obj = await context.bot.get_chat(user_id) # Fetch user as a Chat object
+
         # Create a Message object mimicking the first message of the media group
-        # We don't need the full message data, just enough structure for handlers
+        # We don't have the original message's date directly, so we can omit it or use None.
+        # We don't have the full message data, just enough structure for handlers
         source_message_obj = Message(
-            message_id=fmid,
-            date=update.message.date if update and update.message else None, # Use date from one of the received messages if available
-            chat=chat_obj,
-            from_user=user # Use the user who sent the media group
+            message_id=fmid, # Use the first message ID from job_data
+            date=None, # Cannot reliably get the exact date here
+            chat=chat_obj, # Use the fetched chat object
+            from_user=user_obj # Use the fetched user object (as a Chat type, which acts like a User)
         )
     except Exception as chat_err:
-        logger.error(f"Не удалось получить Chat object для {chat_id} или создать source_message_obj: {chat_err}.")
-        # Fallback: Create a minimal Message object with just chat_id and type
-        # This might cause issues later if more message properties are accessed.
+        logger.error(f"Не удалось получить Chat/User object или создать source_message_obj для {chat_id}/{user_id}: {chat_err}.")
+        # Fallback: Create a minimal Message object with just chat_id, type, and a dummy user
+        # This might cause issues later if more message properties are accessed or if user_obj is expected as a User type.
+        # A minimal User object can be created if needed, but Chat often suffices.
+        # Let's try creating a minimal User object for better compatibility.
+        from telegram import User # Ensure User is imported
+
+        # Create a dummy User object
+        dummy_user = User(id=user_id, first_name=user_mention, is_bot=False) # Use user_mention as first_name fallback
+
         source_message_obj = Message(
-             message_id=fmid,
-             date=None, # Cannot get date without full message
-             chat=Chat(id=chat_id, type=ChatType.GROUP), # Guess chat type
-             from_user=user # Still need the user object
+             message_id=fmid, # Use the first message ID from job_data
+             date=None, # Cannot reliably get the date
+             chat=Chat(id=chat_id, type=ChatType.GROUP), # Create a minimal Chat object
+             from_user=dummy_user # Use the dummy User object
         )
 
 
