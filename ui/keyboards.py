@@ -222,7 +222,15 @@ def generate_prompt_action_keyboard(state: dict, msg_id: int) -> InlineKeyboardM
         InlineKeyboardButton("🔄 Заново", callback_data=f"regen|{msg_id}"), InlineKeyboardButton("⚙️ Настройки" if not settings_visible else "⬆️ Свернуть", callback_data=f"toggle_settings|{msg_id}"),
     ]; keyboard.append(row1)
     row2 = [ InlineKeyboardButton("🎨 Тип", callback_data=f"show_type|{msg_id}"), InlineKeyboardButton("🖌️ Стиль", callback_data=f"show_style|{msg_id}"), InlineKeyboardButton("👨‍🎨 Художник", callback_data=f"show_artist|{msg_id}"), InlineKeyboardButton("📝 Промпт", callback_data=f"hide_prompt|{msg_id}"), ]; keyboard.append(row2)
-    row3 = [ InlineKeyboardButton("🚫 Сброс", callback_data=f"reset_prompt|{msg_id}"), InlineKeyboardButton("✨ Улучшить", callback_data=f"enhance|{msg_id}"), InlineKeyboardButton("✏️ Изменить", callback_data=f"change_prompt_req|{msg_id}"), InlineKeyboardButton("✅ OK", callback_data=f"hide_prompt|{msg_id}") ]; keyboard.append(row3)
+    
+    # --- Modified Row 3 ---
+    row3 = [ 
+        InlineKeyboardButton("🚫 Сброс", callback_data=f"reset_prompt|{msg_id}"), 
+        InlineKeyboardButton("✨ Улучшить", callback_data=f"enhance|{msg_id}"), 
+        # InlineKeyboardButton("✏️ Изменить изображение по вашему запросу", callback_data=f"change_prompt_req|{msg_id}"), # <<< REMOVE or COMMENT OUT
+        InlineKeyboardButton("🖼️ Описать", callback_data=f"describe_img_prompt|{msg_id}"), # <<< ADD THIS NEW BUTTON
+        InlineKeyboardButton("✅ OK", callback_data=f"hide_prompt|{msg_id}") 
+    ]; keyboard.append(row3)
     return InlineKeyboardMarkup(keyboard)
 # ================================== generate_prompt_action_keyboard() end ==================================
 
