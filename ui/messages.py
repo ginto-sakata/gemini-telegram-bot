@@ -70,17 +70,18 @@ def _compare_settings(current_state: Dict[str, Any], original_settings: Dict[str
     return False
 # ================================== _compare_settings() end ==================================
 
+      
 # ================================== _build_caption_parts(): Builds caption lines (with index and short alias) ==================================
 def _build_caption_parts(
     state: Dict[str, Any],
     api_text_result: Optional[str],
-    show_llm_text_setting: bool # This setting is now passed in
+    show_llm_text_setting: bool
 ) -> List[str]:
     """
-    Builds caption components. Always uses '!' command prefix.
+    Builds caption components. Uses '!' command prefix without a following space.
     Handles awaiting_prompt_change state. Displays indices in <pre> block.
     Uses <pre> block for Type/Style/Artist alignment. Adds newline before command.
-    Shows full Russian artist alias in <pre> block, short alias in command line.
+    Shows full Russian artist alias in <pre> block, artist index in command line.
     Removes 'Команда:' label. Uses configurable default for showing LLM text.
     """
     caption_parts = []
@@ -96,10 +97,8 @@ def _build_caption_parts(
     p_type_alias = selected_type_data.get('alias') if selected_type_data else None
     p_style_alias = selected_style_data.get('alias') if selected_style_data else None
     p_artist_alias_full = selected_artist_data.get('alias') if selected_artist_data else None
-    p_artist_alias_short = selected_artist_data.get('alias_short') if selected_artist_data else None # Get short alias
-    
-    # 1. LLM Text (only if not awaiting prompt)
-    # Use the passed-in setting
+    # p_artist_alias_short is no longer needed for command line display, but kept for potential future use
+    # p_artist_alias_short = selected_artist_data.get('alias_short') if selected_artist_data else None
     # Reminder: Use new line, not semicolon, for the following block/statement.
     if not is_awaiting_prompt and show_llm_text_setting and api_text_result:
         processed_llm_text = ""
@@ -112,8 +111,6 @@ def _build_caption_parts(
             except Exception as e: logger.warning(f"Ошибка форматирования LLM: {e}"); processed_llm_text = escape(raw_text_input)
             # Reminder: Use new line, not semicolon, for the following block/statement.
             if processed_llm_text: caption_parts.append(processed_llm_text); caption_parts.append("\n\n")
-            
-    # 2. Parameters Section within <pre> block
     label_type_raw = "Тип:"; label_style_raw = "Стиль:"; label_artist_raw = "Художник:"
     label_type = label_type_raw; label_style = label_style_raw; label_artist = label_artist_raw
     type_value_html = ""; style_value_html = ""; artist_value_html = ""
@@ -124,27 +121,23 @@ def _build_caption_parts(
     if p_style_alias and selected_style_abs_index is not None: style_value_html = f"[{selected_style_abs_index}] <b>{escape(str(p_style_alias))}</b>"
     elif p_style_alias: style_value_html = f"<b>{escape(str(p_style_alias))}</b>"
     # Reminder: Use new line, not semicolon, for the following block/statement.
-    if p_artist_alias_full and selected_artist_abs_index is not None: artist_value_html = f"[{selected_artist_abs_index}] <b>{escape(str(p_artist_alias_full))}</b>" # Show full alias here
+    if p_artist_alias_full and selected_artist_abs_index is not None: artist_value_html = f"[{selected_artist_abs_index}] <b>{escape(str(p_artist_alias_full))}</b>"
     elif p_artist_alias_full: artist_value_html = f"<b>{escape(str(p_artist_alias_full))}</b>"
-    
     type_line_safe = f"{escape(label_type)} {type_value_html}" if type_value_html else ""
     style_line_safe = f"{escape(label_style)} {style_value_html}" if style_value_html else ""
     artist_line_safe = f"{escape(label_artist)} {artist_value_html}" if artist_value_html else ""
-    
     params_lines = "\n".join(filter(None, [type_line_safe, style_line_safe, artist_line_safe]))
     # Reminder: Use new line, not semicolon, for the following block/statement.
     if params_lines: params_block = f"<pre>{params_lines}</pre>"; caption_parts.append(params_block)
-    
-    # 3. Command Line
     prompt_value_html = ""
     # Reminder: Use new line, not semicolon, for the following block/statement.
     if is_awaiting_prompt:
         prompt_value_html = "<pre>Пожалуйста, отправьте желаемые изменения ответом на это сообщение.</pre>"
         # Reminder: Use new line, not semicolon, for the following block/statement.
-        if params_lines: caption_parts.append("\n") # Add newline if params exist
+        if params_lines: caption_parts.append("\n")
         caption_parts.append(f"\n{prompt_value_html}")
     else:
-        command_prefix = "!"
+        command_prefix = "!" # No space after !
         prompt_text_part = str(prompt_to_display or "").strip()
         arg_parts_display = []
         # Reminder: Use new line, not semicolon, for the following block/statement.
@@ -153,11 +146,9 @@ def _build_caption_parts(
         if selected_style_data and selected_style_abs_index is not None: arg_parts_display.append(f"-s{selected_style_abs_index}")
         # Reminder: Use new line, not semicolon, for the following block/statement.
         if selected_artist_data and selected_artist_abs_index is not None:
-            artist_cmd_val = p_artist_alias_short if p_artist_alias_short else selected_artist_abs_index
-            arg_parts_display.append(f"-a{artist_cmd_val}") # Note: Changed to -a<value> for consistency with -t -s
+            arg_parts_display.append(f"-a{selected_artist_abs_index}") # MODIFIED: Always use index for artist
         # Reminder: Use new line, not semicolon, for the following block/statement.
         if selected_ar: arg_parts_display.append(f"--ar {selected_ar}")
-        
         current_args_string = " ".join(arg_parts_display)
         display_prompt_line = prompt_text_part
         # Reminder: Use new line, not semicolon, for the following block/statement.
@@ -165,16 +156,16 @@ def _build_caption_parts(
              # Reminder: Use new line, not semicolon, for the following block/statement.
              if prompt_text_part: display_prompt_line += " "
              display_prompt_line += current_args_string
-             
         escaped_display_prompt = escape(display_prompt_line) if display_prompt_line else ""
-        command_separator = " " if escaped_display_prompt else ""
-        prompt_value_html = f"<code>{command_prefix}{command_separator}{escaped_display_prompt}</code>"
+        # MODIFIED: Directly concatenate prefix and prompt
+        prompt_value_html = f"<code>{command_prefix}{escaped_display_prompt}</code>"
         # Reminder: Use new line, not semicolon, for the following block/statement.
         if params_lines: caption_parts.append("\n")
         caption_parts.append(f"\n{prompt_value_html}")
-        
     return caption_parts
 # ================================== _build_caption_parts() end ==================================
+
+    
 
 # ================= Sends image generation result, including inline keyboard and storing original args =====================
 async def send_image_generation_response(
