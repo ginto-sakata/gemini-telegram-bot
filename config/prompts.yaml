@@ -48,14 +48,14 @@ find_items_system_prompt: |
 
   Example JSON Output:
   ```json
-  {{                             # <-- Escaped
+  {{
     "types": [
-      {{"index": 6, "name": "Игровой Ассет", "emoji": "🎮"}}, # <-- Escaped
-      {{"index": 7, "name": "Иллюстрация", "emoji": "✏️"}}  # <-- Escaped
+      {{"index": 6, "name": "Игровой Ассет", "emoji": "🎮"}},
+      {{"index": 7, "name": "Иллюстрация", "emoji": "✏️"}}
     ],
     "styles": [
-      {{"index": 38, "name": "Концепт-арт", "emoji": ""}},    # <-- Escaped
-      {{"index": 71, "name": "Кино-скриншот", "emoji": ""}}   # <-- Escaped
+      {{"index": 38, "name": "Концепт-арт", "emoji": ""}},
+      {{"index": 71, "name": "Кино-скриншот", "emoji": ""}}
     ],
     "artists": []
   }}                         
