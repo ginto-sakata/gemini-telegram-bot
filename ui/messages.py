@@ -74,7 +74,7 @@ def _compare_settings(current_state: Dict[str, Any], original_settings: Dict[str
 def _build_caption_parts(
     state: Dict[str, Any],
     api_text_result: Optional[str],
-    show_llm_text_setting: bool
+    show_llm_text_setting: bool # This setting is now passed in
 ) -> List[str]:
     """
     Builds caption components. Always uses '!' command prefix.
@@ -100,11 +100,8 @@ def _build_caption_parts(
     
     # 1. LLM Text (only if not awaiting prompt)
     # Use the passed-in setting
-    # show_llm_text = context.chat_data.get(CHAT_DATA_KEY_DISPLAY_LLM_TEXT, config.DEFAULT_DISPLAY_LLM_TEXT_BOOL) # <<< REMOVE THIS LINE
-    # Use the passed-in setting
     # Reminder: Use new line, not semicolon, for the following block/statement.
     if not is_awaiting_prompt and show_llm_text_setting and api_text_result:
-    if not is_awaiting_prompt and show_llm_text_setting and api_text_result: # <<< USE show_llm_text_setting
         processed_llm_text = ""
         raw_text_input = api_text_result.strip()
         # Reminder: Use new line, not semicolon, for the following block/statement.
@@ -222,15 +219,6 @@ async def send_image_generation_response(
         DEFAULT_DISPLAY_LLM_TEXT_BOOL 
     )
 
-    generated_file_id = None # To store the file_id of the sent photo
-
-    # Fetch chat-specific settings needed by _build_caption_parts
-    # Use application.bot_data to get chat_data when in a job context
-    current_chat_data = context.application.bot_data.get_chat_data(chat_id)
-    show_llm_text_for_caption = current_chat_data.get(CHAT_DATA_KEY_DISPLAY_LLM_TEXT, config.DEFAULT_DISPLAY_LLM_TEXT_BOOL)
-
-
-    # Unpack resolved settings
     resolved_settings, type_idx, style_idx, artist_idx = resolved_settings_tuple
     
     # Reminder: Use new line, not semicolon, for the following block/statement.
@@ -273,8 +261,6 @@ async def send_image_generation_response(
             logger.warning(f"API вернул ошибку для чата {chat_id}: {api_error_message}")
             error_prefix = "⚠️ Ошибка API:"; escaped_api_error = escape(api_error_message)
             caption_parts = _build_caption_parts(initial_state, None, show_llm_text_for_caption)
-            # Build caption based on the state WE BUILT, even on error, showing intended settings
-            caption_parts = _build_caption_parts(initial_state, None, show_llm_text_for_caption) # <<< Pass fetched setting
             error_body = f"{error_prefix}\n<pre>{escaped_api_error}</pre>"
             final_caption_or_text = f"{error_body}\n\n{''.join(caption_parts)}"; parse_mode = ParseMode.HTML
             sent_message = await context.bot.send_message(
@@ -285,12 +271,8 @@ async def send_image_generation_response(
             # Reminder: Use new line, not semicolon, for the following block/statement.
             if CHAT_DATA_KEY_LAST_GENERATION in current_chat_data_dict: # Use current_chat_data_dict
                 del current_chat_data_dict[CHAT_DATA_KEY_LAST_GENERATION]
-            if CHAT_DATA_KEY_LAST_GENERATION in current_chat_data: del current_chat_data[CHAT_DATA_KEY_LAST_GENERATION] # <<< Use current_chat_data
-
         elif api_image_bytes:
             caption_parts = _build_caption_parts(initial_state, api_text_result, show_llm_text_for_caption)
-            # Build caption based on the state WE BUILT
-            caption_parts = _build_caption_parts(initial_state, api_text_result, show_llm_text_for_caption) # <<< Pass fetched setting
             final_caption_or_text = "".join(caption_parts); parse_mode = ParseMode.HTML
             # Reminder: Use new line, not semicolon, for the following block/statement.
             if len(final_caption_or_text) > 1024: final_caption_or_text = final_caption_or_text[:1020] + "..."
@@ -308,8 +290,6 @@ async def send_image_generation_response(
                 initial_state["generated_file_id"] = generated_file_id
                 logger.debug(f"Stored generated_file_id in state: {generated_file_id}")
                 current_chat_data_dict[CHAT_DATA_KEY_LAST_GENERATION] = {'chat_id': chat_id, 'message_id': sent_message.message_id} # Use current_chat_data_dict
-
-                current_chat_data[CHAT_DATA_KEY_LAST_GENERATION] = {'chat_id': chat_id, 'message_id': sent_message.message_id} # <<< Use current_chat_data
                 logger.info(f"Updated last generation tracker for chat {chat_id} to msg {sent_message.message_id}")
                 keyboard_with_id = generate_main_keyboard(initial_state, sent_message.message_id)
                 # Reminder: Use new line, not semicolon, for the following block/statement.
@@ -325,12 +305,8 @@ async def send_image_generation_response(
                 if CHAT_DATA_KEY_LAST_GENERATION in current_chat_data_dict: # Use current_chat_data_dict
                     del current_chat_data_dict[CHAT_DATA_KEY_LAST_GENERATION]
         elif api_text_result:
-                if CHAT_DATA_KEY_LAST_GENERATION in current_chat_data: del current_chat_data[CHAT_DATA_KEY_LAST_GENERATION] # <<< Use current_chat_data
-
-        elif api_text_result: # Text only response
             logger.info(f"API изображений вернул только текст для чата {chat_id}.")
             caption_parts = _build_caption_parts(initial_state, api_text_result, show_llm_text_for_caption)
-            caption_parts = _build_caption_parts(initial_state, api_text_result, show_llm_text_for_caption) # <<< Pass fetched setting
             info_prefix = "\n\nℹ️ Ответ API (только текст):"; final_caption_or_text = "".join(caption_parts)
             # Reminder: Use new line, not semicolon, for the following block/statement.
             if not show_llm_text_for_caption:
@@ -346,28 +322,20 @@ async def send_image_generation_response(
             if CHAT_DATA_KEY_LAST_GENERATION in current_chat_data_dict: # Use current_chat_data_dict
                 del current_chat_data_dict[CHAT_DATA_KEY_LAST_GENERATION]
         else:
-            if CHAT_DATA_KEY_LAST_GENERATION in current_chat_data: del current_chat_data[CHAT_DATA_KEY_LAST_GENERATION] # <<< Use current_chat_data
-
-        else: # Empty response
             logger.error(f"send_image_generation_response: От API не получено ни ошибки, ни контента (чат {chat_id}).")
             caption_parts = _build_caption_parts(initial_state, None, show_llm_text_for_caption)
-            caption_parts = _build_caption_parts(initial_state, None, show_llm_text_for_caption) # <<< Pass fetched setting
             error_msg_text = f"Извините, не удалось сгенерировать ответ (пустой ответ от API)."
             final_caption_or_text = f"{error_msg_text}\n\n{''.join(caption_parts)}"
             await context.bot.send_message(chat_id=chat_id, text=final_caption_or_text, parse_mode=ParseMode.HTML, reply_to_message_id=reply_to_message_id, disable_web_page_preview=True)
             # Reminder: Use new line, not semicolon, for the following block/statement.
             if CHAT_DATA_KEY_LAST_GENERATION in current_chat_data_dict: # Use current_chat_data_dict
                 del current_chat_data_dict[CHAT_DATA_KEY_LAST_GENERATION]
-            if CHAT_DATA_KEY_LAST_GENERATION in current_chat_data: del current_chat_data[CHAT_DATA_KEY_LAST_GENERATION] # <<< Use current_chat_data
-
-    # Error handling remains the same...
     # Reminder: Use new line, not semicolon, for the following block/statement.
     except TelegramError as e:
         logger.error(f"Ошибка Telegram при отправке ответа генерации (чат {chat_id}): {e}")
         # Reminder: Use new line, not semicolon, for the following block/statement.
         if CHAT_DATA_KEY_LAST_GENERATION in current_chat_data_dict: # Use current_chat_data_dict
             del current_chat_data_dict[CHAT_DATA_KEY_LAST_GENERATION]
-        if CHAT_DATA_KEY_LAST_GENERATION in current_chat_data: del current_chat_data[CHAT_DATA_KEY_LAST_GENERATION] # <<< Use current_chat_data
         # Reminder: Use new line, not semicolon, for the following block/statement.
         if "parse error" in str(e).lower() or "Can't parse entities" in str(e):
              logger.error(f"ОШИБКА ПАРСИНГА! Контент: {final_caption_or_text[:500]}...")
@@ -394,7 +362,6 @@ async def send_image_generation_response(
          # Reminder: Use new line, not semicolon, for the following block/statement.
          if CHAT_DATA_KEY_LAST_GENERATION in current_chat_data_dict: # Use current_chat_data_dict
             del current_chat_data_dict[CHAT_DATA_KEY_LAST_GENERATION]
-         if CHAT_DATA_KEY_LAST_GENERATION in current_chat_data: del current_chat_data[CHAT_DATA_KEY_LAST_GENERATION] # <<< Use current_chat_data
          # Reminder: Use new line, not semicolon, for the following block/statement.
          try: await context.bot.send_message(chat_id=chat_id, text="❌ Внутренняя ошибка.", reply_to_message_id=reply_to_message_id)
          # Reminder: Use new line, not semicolon, for the following block/statement.
@@ -413,12 +380,6 @@ async def update_caption_and_keyboard(context: ContextTypes.DEFAULT_TYPE, chat_i
         try: await context.bot.edit_message_reply_markup(chat_id=chat_id, message_id=msg_id, reply_markup=None)
         except Exception: pass
         return
-    
-
-    # Fetch chat-specific settings needed by _build_caption_parts
-    current_chat_data = context.application.bot_data.get_chat_data(chat_id)
-    show_llm_text_for_caption_update = current_chat_data.get(CHAT_DATA_KEY_DISPLAY_LLM_TEXT, config.DEFAULT_DISPLAY_LLM_TEXT, config.DEFAULT_DISPLAY_LLM_TEXT_BOOL)
-
 
     # --- Correctly access chat_data from TTLCache ---
     if 'chat_data' not in context.application.bot_data:
@@ -449,7 +410,6 @@ async def update_caption_and_keyboard(context: ContextTypes.DEFAULT_TYPE, chat_i
     
     api_text_result = state.get("last_api_text_result")
     caption_parts = _build_caption_parts(state, api_text_result, show_llm_text_for_caption_update)
-    caption_parts = _build_caption_parts(state, api_text_result, show_llm_text_for_caption_update) # <<< Pass fetched setting
     new_caption = "".join(caption_parts); parse_mode = ParseMode.HTML
     if len(new_caption) > 1024: new_caption = new_caption[:1020] + "..."; logger.warning(f"Обновленная подпись усечена (msg {msg_id}).")
     
