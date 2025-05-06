@@ -27,7 +27,7 @@ async def is_authorized(update: Update, context: ContextTypes.DEFAULT_TYPE) -> b
     if not is_auth:
         logger.warning(f"Unauthorized access: User={user.id} ('{user.username}'), Chat={chat.id} ('{chat.title}') Type='{chat.type}'")
         try:
-            await context.bot.send_message(chat_id=chat.id, text="❌ Извините, у вас нет прав.")
+            await context.bot.send_message(chat_id=chat.id, text="Извините, у вас нет доступа.\nБот предназначен для работы в группе @gintobots.\nВы можете воспользоваться генерацией текста с помощью новейшей модели Gemini 2.5 Flash. Просто отправьте мне сообщение или вопрос!")
             chat_title_escaped = escape(chat.title) if chat.title else 'Приватный чат'
             admin_notify_msg = (
                 f"⚠️ Несанкц. доступ:\nПользователь: {user.mention_html()} (<code>{user.id}</code>)\n"
