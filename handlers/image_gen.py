@@ -1006,6 +1006,7 @@ async def handle_image_with_caption(update: Update, context: ContextTypes.DEFAUL
 # ================================== handle_image_with_caption() end ==================================
 
 
+      
 # ================================== handle_photo_reply_to_image(): Handles photo reply to bot image ==================================
 @restrict_private_unauthorized
 async def handle_photo_reply_to_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -1058,21 +1059,26 @@ async def handle_photo_reply_to_image(update: Update, context: ContextTypes.DEFA
          logger.error(f"Ошибка загрузки ответа ({user_file_id}): {img_bytes_user}")
          img_bytes_user = None
      # Reminder: Use new line, not semicolon, for the following block/statement.
-     if not img_bytes_original or not img_bytes_user:
+     if img_bytes_original and img_bytes_user: # <<<< CORRECTED CONDITION
          await _initiate_image_combination(
-         context=context, 
-         base_image_bytes=img_bytes_original, # Bytes of the first image
-         user_image_bytes=img_bytes_user,      # Bytes of the second image
-         user_prompt=user_prompt, 
-         chat_id=chat.id, 
-         user_id=user.id, 
-         user_mention=user.mention_html(),
-         reply_to_msg_id=message.message_id, 
-         source_message=message,
-         original_file_id_1=original_file_id, # <<< Pass the file ID of the bot's original photo
-         original_file_id_2=user_file_id      # <<< Pass the file ID of the user's reply photo
-     )
+             context=context,
+             base_image_bytes=img_bytes_original,
+             user_image_bytes=img_bytes_user,
+             user_prompt=user_prompt,
+             chat_id=chat.id,
+             user_id=user.id,
+             user_mention=user.mention_html(),
+             reply_to_msg_id=message.message_id,
+             source_message=message,
+             original_file_id_1=original_file_id,
+             original_file_id_2=user_file_id
+         )
+     else: # <<<< ADDED ELSE BLOCK
+         logger.error("Сбой загрузки одного или обоих изображений. Комбинация отменена.")
+         await message.reply_text("❌ Ошибка загрузки одного или обоих изображений для комбинации.")
 # ================================== handle_photo_reply_to_image() end ==================================
+
+    
 
 
 # handlers/image_gen.py end
