@@ -208,6 +208,23 @@ async def handle_text_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logger.debug(f"Текст ответ на сообщение неизвестного типа.")
 # ================================== handle_text_reply() end ==================================
 
+# ================================== handle_private_text() ==================================
+async def handle_private_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    message = update.message
+    if not message or not message.text:
+        return
+
+    user_prompt = message.text.strip()
+    if not user_prompt:
+        return
+
+    # Skip if replying to a bot message — already handled by handle_text_reply()
+    if message.reply_to_message and message.reply_to_message.from_user.id == context.bot.id:
+        return
+
+    # Proceed with text generation
+    await process_text_generation_request(update, context, user_prompt)
+# ================================== handle_private_text() end ==================================
     
 
 # handlers/text_gen.py end

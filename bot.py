@@ -12,6 +12,7 @@ import asyncio
 import pickle
 from pathlib import Path
 import signal
+from handlers.text_gen import handle_private_text
 from telegram import Update
 from telegram.ext import (
     Application, ApplicationBuilder, CommandHandler, MessageHandler,
@@ -170,6 +171,11 @@ def main():
 
         # Group 10: Callback Query Handler
         application.add_handler(CallbackQueryHandler(callback_handlers.handle_callback_query, block=False), group=10)
+
+        application.add_handler(
+            MessageHandler(filters.TEXT & ~filters.COMMAND & filters.ChatType.PRIVATE, handle_private_text),
+            group=3
+        )
 
         logger.info("Регистрация обработчиков завершена.")
         logger.info("Запуск бота (run_polling)...")
