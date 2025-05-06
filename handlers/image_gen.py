@@ -401,21 +401,30 @@ def _determine_context(update: Optional[Update], query: Optional[CallbackQuery])
 
 
 # ================================== _send_processing_message(): Sends the initial "processing" message ==================================
-async def _send_processing_message(context: ContextTypes.DEFAULT_TYPE, chat: Chat, source_message: Message, user_mention: str, action_text: str = "генерирую изображение") -> Optional[Message]:
+# This function is called from contexts where the source_message might not be a 'live' object,
+# so we should use context.bot.send_message explicitly.
+async def _send_processing_message(context: ContextTypes.DEFAULT_TYPE, chat_id: int, reply_to_message_id: int, user_mention: str, action_text: str = "генерирую изображение") -> Optional[Message]:
+    """
+    Sends an initial 'processing' message as a reply to a specific message ID.
+    Returns the sent Message object or None on failure.
+    """
     processing_msg = None
     # Reminder: Use new line, not semicolon, for the following block/statement.
     try:
-        processing_msg = await source_message.reply_html(f"⏳ {user_mention}, {action_text}...")
-        logger.debug(f"Sent '{action_text}' msg {processing_msg.message_id} reply to {source_message.message_id}")
+        # Use context.bot.send_message directly, specifying chat_id and reply_to_message_id
+        processing_msg = await context.bot.send_message(
+            chat_id=chat_id,
+            text=f"⏳ {action_text}...",
+            parse_mode=ParseMode.HTML, # Use HTML for user_mention
+            reply_to_message_id=reply_to_message_id
+        )
+        logger.debug(f"Sent '{action_text}' msg {processing_msg.message_id} reply to {reply_to_message_id}")
     # Reminder: Use new line, not semicolon, for the following block/statement.
     except Exception as e:
-        logger.error(f"Failed send '{action_text}' reply msg: {e}")
-        # Reminder: Use new line, not semicolon, for the following block/statement.
-        try:
-            processing_msg = await context.bot.send_message(chat_id=chat.id, text=f"⏳ {user_mention}, {action_text}...")
-        # Reminder: Use new line, not semicolon, for the following block/statement.
-        except Exception as fallback_err:
-            logger.error(f"Failed send fallback '{action_text}' msg: {fallback_err}")
+        logger.error(f"Failed send '{action_text}' reply msg to chat {chat_id}, replying to {reply_to_message_id}: {e}", exc_info=True)
+        # If even this fails, there's not much more we can do to inform the user here.
+        processing_msg = None # Ensure processing_msg is None if sending fails
+
     return processing_msg
 # ================================== _send_processing_message() end ==================================
 
@@ -596,31 +605,65 @@ def _resolve_settings(parsed_settings_data: Dict[str, Any]) -> Tuple[Dict[str, A
 # ================================== _resolve_settings() end ==================================
 
 
-# ================================== _initiate_image_generation(): For new images, regen, simple edits ==================================
 async def _initiate_image_generation(
     update: Optional[Update], context: ContextTypes.DEFAULT_TYPE, query: Optional[CallbackQuery],
     user_prompt: str, parsed_settings_data: Dict[str, Any], original_prompt_for_display: str,
-    base_image_bytes: Optional[bytes] = None, user_image_bytes: Optional[bytes] = None, # user_image_bytes is for direct combination, not typically used by /img
-    user_uploaded_base_image_file_id: Optional[str] = None, # For Re-Gen to remember initial single user upload
-    # Add parameters for passing through combination source file IDs
+    base_image_bytes: Optional[bytes] = None, user_image_bytes: Optional[bytes] = None,
+    user_uploaded_base_image_file_id: Optional[str] = None,
     source_image_file_id_1_for_passthrough: Optional[str] = None,
     source_image_file_id_2_for_passthrough: Optional[str] = None
 ):
-    chat, user, reply_to_msg_id, source_message = _determine_context(update, query)
+    chat, user, reply_to_msg_id, source_message = _determine_context(update, query) # source_message is used for context, reply_to_msg_id is for the actual reply
     # Reminder: Use new line, not semicolon, for the following block/statement.
-    if not chat or not user or not source_message:
-        logger.error("Generation failed: Could not determine context.")
+    if not chat or not user or not reply_to_msg_id: # Ensure reply_to_msg_id is also valid
+        logger.error("Generation failed: Could not determine context (chat, user, or reply_to_msg_id).")
+        # Reminder: Use new line, not semicolon, for the following block/statement.
+        if query and query.message: # Try to send error to query user if possible
+            # Reminder: Use new line, not semicolon, for the following block/statement.
+            try: await query.message.reply_text("❌ Ошибка: не удалось определить контекст для генерации.")
+            # Reminder: Use new line, not semicolon, for the following block/statement.
+            except Exception as e_reply: logger.error(f"Failed to send context error message: {e_reply}")
+        elif update and update.message:
+            # Reminder: Use new line, not semicolon, for the following block/statement.
+            try: await update.message.reply_text("❌ Ошибка: не удалось определить контекст для генерации.")
+            # Reminder: Use new line, not semicolon, for the following block/statement.
+            except Exception as e_reply: logger.error(f"Failed to send context error message: {e_reply}")
         return
+
     user_mention = user.mention_html()
-    processing_msg = await _send_processing_message(context, chat, source_message, user_mention, "генерирую изображение")
+    
+    # Call the updated _send_processing_message
+    processing_msg = await _send_processing_message(
+        context=context,
+        chat_id=chat.id,
+        reply_to_message_id=reply_to_msg_id, # Use the determined reply_to_msg_id
+        user_mention=user_mention,
+        action_text="генерирую изображение"
+    )
+
     # Resolve the settings based on parsed data (handles randomization)
     resolved_settings, type_idx, style_idx, artist_idx = _resolve_settings(parsed_settings_data)
     resolved_settings_tuple = (resolved_settings, type_idx, style_idx, artist_idx)
+    
+    # Get chat-specific image suffix from chat_data (or default)
+    # Since this function can be called from various contexts (direct command, callback, job),
+    # we need to robustly access chat_data.
+    # For direct handlers (update is not None), context.chat_data is fine.
+    # For callbacks (query is not None), context.chat_data might be available via query.message.chat_id.
+    # For jobs, we'd need to pass chat_id and use application.bot_data.
+    # Let's assume for now that if this function is called, chat.id is valid.
+    system_suffix = ""
+    # Reminder: Use new line, not semicolon, for the following block/statement.
+    if context.application.bot_data.get('chat_data') and chat.id in context.application.bot_data['chat_data']:
+        system_suffix = context.application.bot_data['chat_data'][chat.id].get(CHAT_DATA_KEY_IMAGE_SUFFIX, DEFAULT_IMAGE_PROMPT_SUFFIX)
+    else: # Fallback if chat_data for this specific chat isn't initialized in bot_data yet
+        system_suffix = DEFAULT_IMAGE_PROMPT_SUFFIX
+        logger.debug(f"Chat data for {chat.id} not found in bot_data for suffix, using default.")
 
-    system_suffix = context.chat_data.get(config.CHAT_DATA_KEY_IMAGE_SUFFIX, config.DEFAULT_IMAGE_PROMPT_SUFFIX)
+
     # Construct the prompt using RESOLVED settings
     final_api_prompt = construct_prompt_with_style(
-        base_prompt=user_prompt, # Use the prompt determined by the calling handler (could be auto-description)
+        base_prompt=user_prompt, 
         selected_type_data=resolved_settings["type_data"],
         selected_style_data=resolved_settings["style_data"],
         selected_artist_data=resolved_settings["artist_data"],
@@ -628,18 +671,23 @@ async def _initiate_image_generation(
         suffix_text=system_suffix
     )
     logger.info(f"Constructed API prompt (Gen): '{final_api_prompt[:200]}...'")
-    api_text, api_img, api_err = await generate_image_with_gemini(final_api_prompt, base_image_bytes, user_image_bytes)
 
-    # Send response, passing BOTH resolved tuple and original parsed data
+    api_text, api_img, api_err = await generate_image_with_gemini(
+        final_api_prompt, 
+        input_image_original=base_image_bytes, 
+        input_image_user=user_image_bytes
+    )
+    
     await send_image_generation_response(
         context, chat.id, reply_to_msg_id, processing_msg.message_id if processing_msg else None,
         api_text, api_img, api_err,
-        original_prompt_for_display, # The initial user prompt OR auto-description
-        resolved_settings_tuple, # Tuple of (resolved_dict, type_idx, style_idx, artist_idx)
+        original_prompt_for_display, 
+        resolved_settings_tuple, 
         final_api_prompt,
-        original_parsed_settings_data=parsed_settings_data, # Pass original parsed args
-        base_image_file_id_for_regen=user_uploaded_base_image_file_id
-    
+        original_parsed_settings_data=parsed_settings_data,
+        base_image_file_id_for_regen=user_uploaded_base_image_file_id,
+        source_image_file_id_1_for_regen=source_image_file_id_1_for_passthrough,
+        source_image_file_id_2_for_regen=source_image_file_id_2_for_passthrough
     )
 # ================================== _initiate_image_generation() end ==================================
 
@@ -651,8 +699,13 @@ async def _initiate_image_editing(
     current_effective_prompt: str, original_user_prompt: str, original_api_prompt: str,
     chat_id: int, user_id: int, user_mention: str, reply_to_msg_id: int, source_message: Message
 ):
-    chat = source_message.chat
-    processing_msg = await _send_processing_message(context, chat, source_message, user_mention, "применяю изменения")
+    processing_msg = await _send_processing_message(
+        context=context,
+        chat_id=chat_id, # Use the passed chat_id
+        reply_to_message_id=reply_to_msg_id, # This is the ID of the user's message triggering the edit
+        user_mention=user_mention,
+        action_text="применяю изменения"
+    )
     changed_params = []; edit_instructions = []
     current_ar = current_settings.get("ar"); original_ar = original_settings.get("ar")
     # Reminder: Use new line, not semicolon, for the following block/statement.
@@ -708,11 +761,11 @@ async def _initiate_image_editing(
     await send_image_generation_response(
         context, chat_id, reply_to_msg_id, processing_msg.message_id if processing_msg else None,
         api_text, api_img, api_err,
-        original_user_prompt, # Display original prompt
-        resolved_settings_tuple, # The settings used for this edit
-        final_edit_prompt, # API prompt used
-        original_parsed_settings_data=original_parsed_settings_for_state, # Mark as None for edit results
-        base_image_file_id_for_regen=None
+        original_user_prompt, 
+        resolved_settings_tuple, 
+        final_edit_prompt, 
+        original_parsed_settings_data=None, 
+        base_image_file_id_for_regen=None 
     )
 # ================================== _initiate_image_editing() end ==================================
 
@@ -723,8 +776,13 @@ async def _initiate_image_combination(
     user_prompt: str, chat_id: int, user_id: int, user_mention: str, reply_to_msg_id: int, source_message: Message,
     original_file_id_1: str, original_file_id_2: str # <<< ADD THESE
 ):
-    chat = source_message.chat
-    processing_msg = await _send_processing_message(context, chat, source_message, user_mention, "комбинирую изображения")
+    processing_msg = await _send_processing_message(
+        context=context,
+        chat_id=chat_id, # Use the passed chat_id
+        reply_to_message_id=reply_to_msg_id, # This is the ID of the first message in group or user's reply
+        user_mention=user_mention,
+        action_text="комбинирую изображения"
+    )
     final_api_prompt = user_prompt
     logger.info(f"API prompt (Combine): '{final_api_prompt[:200]}...'")
 
@@ -746,31 +804,13 @@ async def _initiate_image_combination(
         api_text_result=api_text,
         api_image_bytes=api_img,
         api_error_message=api_err,
-        
-        # The original user prompt for display is the prompt they provided,
-        # unless it was the default combine text, in which case we display empty.
-        original_user_prompt=user_prompt if user_prompt != DEFAULT_COMBINE_PROMPT_TEXT else "", 
-        
-        # Pass the resolved settings tuple (all None for combination)
+        original_user_prompt=user_prompt if user_prompt != DEFAULT_COMBINE_PROMPT_TEXT else "",
         resolved_settings_tuple=(final_settings_for_state, None, None, None),
-        
-        # Pass the actual prompt sent to the API
         prompt_used_for_api=final_api_prompt,
-        
-        # No specific parsed arguments for a combination result
-        original_parsed_settings_data=None, 
-        
-        # Pass the file IDs of the two source images for the Re-Gen logic
-        # These are the file_ids of the images that were input to this combination.
-        # This is how _handle_regen will know which images to re-fetch.
-        source_image_file_id_1_for_regen=original_file_id_1, # <<< Pass the first source image ID
-        source_image_file_id_2_for_regen=original_file_id_2  # <<< Pass the second source image ID
-        
-        # base_image_file_id_for_regen remains None for a combination result,
-        # as it doesn't stem from a *single* base image in the same way
-        # as an edit or a photo-with-caption generation.
+        original_parsed_settings_data=None,
+        source_image_file_id_1_for_regen=original_file_id_1,
+        source_image_file_id_2_for_regen=original_file_id_2
     )
-
 # ================================== _initiate_image_combination() end ==================================
 
 
