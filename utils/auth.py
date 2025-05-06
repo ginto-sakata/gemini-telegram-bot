@@ -17,28 +17,49 @@ logger = logging.getLogger(__name__)
 
 # ================================== is_authorized(): Checks if user/group is authorized ==================================
 async def is_authorized(update: Update, context: ContextTypes.DEFAULT_TYPE) -> bool:
-    user = update.effective_user; chat = update.effective_chat
-    if not user or not chat: logger.warning("Auth check failed: Missing user/chat info."); return False
-    is_auth = False
-    if user.id == ADMIN_ID_INT: is_auth = True; logger.debug(f"Auth granted: Admin {user.id}.")
-    elif user.id in AUTHORIZED_USER_IDS: is_auth = True; logger.debug(f"Auth granted: User {user.id} in users.")
-    elif chat.type in [ChatType.GROUP, ChatType.SUPERGROUP] and chat.id in AUTHORIZED_GROUP_IDS: is_auth = True; logger.debug(f"Auth granted: Chat {chat.id} ('{chat.title}') in groups.")
-    elif not AUTHORIZED_USER_IDS and not AUTHORIZED_GROUP_IDS and user.id != ADMIN_ID_INT: logger.warning(f"Auth denied: Lists empty, only Admin ({ADMIN_ID_INT}) allowed. User: {user.id}"); is_auth = False
-    if not is_auth:
-        logger.warning(f"Unauthorized access: User={user.id} ('{user.username}'), Chat={chat.id} ('{chat.title}') Type='{chat.type}'")
-        try:
-            await context.bot.send_message(chat_id=chat.id, text="Извините, у вас нет доступа.\nБот предназначен для работы в группе @gintobots.\nВы можете воспользоваться генерацией текста с помощью новейшей модели Gemini 2.5 Flash. Просто отправьте мне сообщение или вопрос!")
-            chat_title_escaped = escape(chat.title) if chat.title else 'Приватный чат'
-            admin_notify_msg = (
-                f"⚠️ Несанкц. доступ:\nПользователь: {user.mention_html()} (<code>{user.id}</code>)\n"
-                f"Чат: {chat_title_escaped} (<code>{chat.id}</code>)\nТип: {chat.type}"
-            )
-            if ADMIN_ID_INT: await context.bot.send_message(chat_id=ADMIN_ID_INT, text=admin_notify_msg, parse_mode=ParseMode.HTML)
-            else: logger.error("Cannot notify admin: ADMIN_ID_INT not configured.")
-        except TelegramError as e: logger.error(f"Error sending auth notification (User: {user.id}, Chat: {chat.id}): {e}")
-        except Exception as e: logger.error(f"Unexpected error during auth notification: {e}", exc_info=True)
+    user = update.effective_user
+    chat = update.effective_chat
+
+    if not user or not chat:
+        logger.warning("Auth check failed: Missing user/chat info.")
         return False
-    return True
+
+    # Admin always allowed
+    if user.id == ADMIN_ID_INT:
+        logger.debug(f"Auth granted: Admin {user.id}.")
+        return True
+
+    # Explicitly authorized user
+    if user.id in AUTHORIZED_USER_IDS:
+        logger.debug(f"Auth granted: User {user.id} in users.")
+        return True
+
+    # Group chat: allow only if in allowed group IDs
+    if chat.type != ChatType.PRIVATE and chat.id in AUTHORIZED_GROUP_IDS:
+        logger.debug(f"Auth granted: Group {chat.id}.")
+        return True
+
+    # Default: unauthorized
+    logger.warning(f"Unauthorized access attempt by {user.id} ({user.username}) in chat {chat.id}")
+
+    # Show the exact original unauthorized message
+    unauthorized_text = (
+        "Извините, у вас нет доступа к генерации изображений.\n"
+        "Бот предназначен для работы в группе @ginto_bots.\n"
+        "Для запроса доступа к генерации сообщений обратитесь ко мне: @gin7o"
+        "Вы можете воспользоваться генерацией текста с помощью новейшей модели Gemini 2.5 Flash. "
+        "Просто отправьте сообщение или вопрос!"
+    )
+
+    try:
+        if update.callback_query:
+            await update.callback_query.answer(unauthorized_text, show_alert=True)
+        elif update.message:
+            await update.message.reply_text(unauthorized_text)
+    except Exception:
+        pass
+
+    return False
 # ================================== is_authorized() end ==================================
 
 # utils/auth.py end

@@ -21,6 +21,7 @@ from config import (
 )
 from handlers.image_gen import parse_img_args_prompt_first, _initiate_image_generation, _initiate_image_editing
 from utils.cache import get_cached_image_bytes
+from utils.decorators import restrict_private_unauthorized
 from utils.telegram_helpers import delete_message_safely
 import config # Import config to access constants easily
 
@@ -158,6 +159,7 @@ async def show_text_history_command(update: Update, context: ContextTypes.DEFAUL
 
 
 # ================================== set_image_prompt_suffix_command(): Handles /prompt <text|reset|clear> (Suffix) ==================================
+@restrict_private_unauthorized
 async def set_image_prompt_suffix_command(update: Update, context: ContextTypes.DEFAULT_TYPE): # Renamed function
     # Reminder: Use new line, not semicolon, for the following block/statement.
     if not await is_authorized(update, context):
@@ -222,6 +224,7 @@ async def set_image_prompt_suffix_command(update: Update, context: ContextTypes.
 
 
 # ================================== clear_image_prompt_suffix_command(): Handles /prompt clear (Suffix) ==================================
+@restrict_private_unauthorized
 async def clear_image_prompt_suffix_command(update: Update, context: ContextTypes.DEFAULT_TYPE): # Renamed function
     # Reminder: Use new line, not semicolon, for the following block/statement.
     if not await is_authorized(update, context):
@@ -261,6 +264,7 @@ async def toggle_llm_text_command(update: Update, context: ContextTypes.DEFAULT_
 
 
 # ================================== reset_text_system_prompt_command(): Resets/sets text system prompt ==================================
+@restrict_private_unauthorized
 async def reset_text_system_prompt_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Reminder: Use new line, not semicolon, for the following block/statement.
     if not await is_authorized(update, context):

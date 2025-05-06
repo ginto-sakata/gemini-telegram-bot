@@ -40,6 +40,8 @@ from config import (
 )
 import config
 from ui.messages import update_caption_and_keyboard # Import needed for reply handler
+from utils.decorators import restrict_private_unauthorized
+
 
 logger = logging.getLogger(__name__)
 
@@ -729,8 +731,8 @@ async def _initiate_image_combination(
 
 
 # ================================== handle_img_command(): Handles /img command ==================================
+@restrict_private_unauthorized
 async def handle_img_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # Reminder: Use new line, not semicolon, for the following block/statement.
     if not await is_authorized(update, context):
         return
     # Reminder: Use new line, not semicolon, for the following block/statement.
@@ -758,6 +760,7 @@ async def handle_img_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
 
 # ================================== handle_img_shortcut(): Handles ! shortcut ==================================
+@restrict_private_unauthorized
 async def handle_img_shortcut(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Reminder: Use new line, not semicolon, for the following block/statement.
     if not await is_authorized(update, context):
@@ -831,6 +834,7 @@ async def handle_random_img_shortcut(update: Update, context: ContextTypes.DEFAU
 
 
 # ================================== handle_image_with_caption(): Handles single photo + caption (with flags or auto-describe) ==================================
+@restrict_private_unauthorized
 async def handle_image_with_caption(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Reminder: Use new line, not semicolon, for the following block/statement.
     if not await is_authorized(update, context): return
@@ -922,6 +926,7 @@ async def handle_image_with_caption(update: Update, context: ContextTypes.DEFAUL
 
 
 # ================================== handle_photo_reply_to_image(): Handles photo reply to bot image ==================================
+@restrict_private_unauthorized
 async def handle_photo_reply_to_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
      # Reminder: Use new line, not semicolon, for the following block/statement.
      if not await is_authorized(update, context):
