@@ -494,35 +494,133 @@ async def _handle_regen(state: dict, update: Update, context: ContextTypes.DEFAU
 
     # --- Use ORIGINAL parsed settings for Re-Gen ---
     original_parsed_settings = state.get("original_parsed_settings")
-    original_prompt_for_regen = state.get("original_user_prompt", "") # Use the very first prompt
+    original_prompt_for_regen = state.get("original_user_prompt", "")
+    original_prompt_for_display = state.get("original_user_prompt", "") # Keep original for display
+
+    # Default to None for image bytes
+    base_image_bytes_for_api = None
+    user_image_bytes_for_api = None # For the second image in a combination
+
+    # For passing original file_ids back to state if this regen results in a new message
+    # (especially if it's a single user-uploaded image being re-processed)
+    single_base_file_id_to_pass = state.get("base_image_file_id_for_regen")
+    source_1_file_id_to_pass = state.get("source_image_file_id_1_for_regen")
+    source_2_file_id_to_pass = state.get("source_image_file_id_2_for_regen")
+
+    is_re_combination = state.get("is_combination_result", False) and \
+                        state.get("source_image_file_id_1_for_regen") and \
+                        state.get("source_image_file_id_2_for_regen")
+
+    if is_re_combination:
+        logger.info("Re-Gen: Detected re-combination request.")
+        file_id_1 = state["source_image_file_id_1_for_regen"]
+        file_id_2 = state["source_image_file_id_2_for_regen"]
+        prompt_for_re_combination = state.get("api_call_prompt", DEFAULT_COMBINE_PROMPT_TEXT) # Use original combine prompt
+        original_prompt_for_regen = prompt_for_re_combination # Use this as the prompt for API
+        original_prompt_for_display = state.get("original_user_prompt", "") # Display original user prompt if any
+
+        dl_status_msg_combo_regen = None
+        # Reminder: Use new line, not semicolon, for the following block/statement.
+        try:
+            dl_status_msg_combo_regen = await context.bot.send_message(query.message.chat.id, "⏳ Загрузка исходных фото для повторной комбинации...")
+            img1_bytes, img2_bytes = await asyncio.gather(
+                get_cached_image_bytes(context, file_id_1, query.message.chat),
+                get_cached_image_bytes(context, file_id_2, query.message.chat),
+                return_exceptions=True
+            )
+            # Reminder: Use new line, not semicolon, for the following block/statement.
+            if dl_status_msg_combo_regen: await delete_message_safely(context, dl_status_msg_combo_regen.chat_id, dl_status_msg_combo_regen.message_id)
+
+            # Reminder: Use new line, not semicolon, for the following block/statement.
+            if isinstance(img1_bytes, Exception) or not img1_bytes:
+                logger.error(f"Re-Gen Combo: Failed to download image 1 ({file_id_1}): {img1_bytes}")
+                await query.answer("⚠️ Ошибка: не удалось загрузить первое фото для комбинации.", show_alert=True)
+                return False # Stop processing
+            # Reminder: Use new line, not semicolon, for the following block/statement.
+            if isinstance(img2_bytes, Exception) or not img2_bytes:
+                logger.error(f"Re-Gen Combo: Failed to download image 2 ({file_id_2}): {img2_bytes}")
+                await query.answer("⚠️ Ошибка: не удалось загрузить второе фото для комбинации.", show_alert=True)
+                return False # Stop processing
+            
+            base_image_bytes_for_api = img1_bytes
+            user_image_bytes_for_api = img2_bytes
+            parsed_settings_for_initiate = {"type": None, "style": None, "artist": None, "ar": None} # No specific settings for combine
+            single_base_file_id_to_pass = None # Clear this as it's a combo
+        # Reminder: Use new line, not semicolon, for the following block/statement.
+        except Exception as e_dl_combo_regen:
+            logger.error(f"Re-Gen Combo: Error downloading original images: {e_dl_combo_regen}")
+            # Reminder: Use new line, not semicolon, for the following block/statement.
+            if dl_status_msg_combo_regen: await delete_message_safely(context, dl_status_msg_combo_regen.chat_id, dl_status_msg_combo_regen.message_id)
+            await query.answer("⚠️ Ошибка при загрузке фото для повторной комбинации.", show_alert=True)
+            return False
+    elif state.get("base_image_file_id_for_regen"): # Single user-uploaded base image
+        file_id_single_base = state["base_image_file_id_for_regen"]
+        logger.info(f"Re-Gen: Found original single user-uploaded image file_id to re-use: {file_id_single_base}")
+        dl_status_msg_single_regen = None
+        # Reminder: Use new line, not semicolon, for the following block/statement.
+        try:
+            dl_status_msg_single_regen = await context.bot.send_message(query.message.chat.id, "⏳ Загрузка исходного пользовательского фото для 'Заново'...")
+            base_image_bytes_for_api = await get_cached_image_bytes(context, file_id_single_base, query.message.chat)
+            # Reminder: Use new line, not semicolon, for the following block/statement.
+            if dl_status_msg_single_regen: await delete_message_safely(context, dl_status_msg_single_regen.chat_id, dl_status_msg_single_regen.message_id)
+            # Reminder: Use new line, not semicolon, for the following block/statement.
+            if not base_image_bytes_for_api:
+                logger.error(f"Re-Gen: Failed to download original user-uploaded image {file_id_single_base}")
+                await query.answer("⚠️ Ошибка: не удалось загрузить исходное фото для 'Заново'.", show_alert=True)
+                return False # Stop processing
+            source_1_file_id_to_pass = None # Clear these as it's a single base
+            source_2_file_id_to_pass = None
+        # Reminder: Use new line, not semicolon, for the following block/statement.
+        except Exception as e_dl_single_regen:
+            logger.error(f"Re-Gen: Error downloading original single user image {file_id_single_base}: {e_dl_single_regen}")
+            # Reminder: Use new line, not semicolon, for the following block/statement.
+            if dl_status_msg_single_regen: await delete_message_safely(context, dl_status_msg_single_regen.chat_id, dl_status_msg_single_regen.message_id)
+            await query.answer("⚠️ Ошибка при загрузке исходного фото для 'Заново'.", show_alert=True)
+            return False
+        # Use original parsed settings if available for single image re-gen
+        parsed_settings_for_initiate = original_parsed_settings if original_parsed_settings is not None else \
+                                   {"type": None, "style": None, "artist": None, "ar": None, "randomize_type": True, "randomize_style": True, "randomize_artist": True, "style_marker": "RANDOM_GLOBAL"}
+
+    else: # No user-uploaded base image, just re-gen from prompt
+        logger.info("Re-Gen: No specific base image to re-use. Generating from prompt and original args.")
+        parsed_settings_for_initiate = original_parsed_settings if original_parsed_settings is not None else \
+                                   {"type": None, "style": None, "artist": None, "ar": None, "randomize_type": True, "randomize_style": True, "randomize_artist": True, "style_marker": "RANDOM_GLOBAL"}
+        single_base_file_id_to_pass = None
+        source_1_file_id_to_pass = None
+        source_2_file_id_to_pass = None
+
+
+    # Fallback for parsed_settings if somehow still None (should be covered by above)
     # Reminder: Use new line, not semicolon, for the following block/statement.
-    if original_parsed_settings is None: # Fallback if original args weren't stored somehow
+    if parsed_settings_for_initiate is None:
         logger.error(f"Original parsed settings not found in state for msg {query.message.message_id}. Falling back to current effective settings for regen.")
-        effective_prompt = state.get("effective_prompt", state.get("original_user_prompt", ""))
+        # This fallback is less ideal as it doesn't preserve original randomness intent
         type_data = state.get("selected_type_data")
         style_data = state.get("selected_style_data")
         artist_data = state.get("selected_artist_data")
         aspect_ratio = state.get("selected_ar")
-        # Create a structure similar to parsed_settings, but with resolved data
         parsed_settings_for_initiate = {
              "type": type_data, "style": style_data, "artist": artist_data, "ar": aspect_ratio,
-             "randomize_type": False, "randomize_style": False, "randomize_artist": False, "style_marker": None # Assume specific if falling back
+             "randomize_type": False, "randomize_style": False, "randomize_artist": False, "style_marker": None
         }
-        original_prompt_for_display = state.get("original_user_prompt", "") # Keep original for display
-    else:
-        logger.info(f"Regen triggered using ORIGINAL parsed settings: {original_parsed_settings}")
-        parsed_settings_for_initiate = original_parsed_settings
-        # original_prompt_for_display needs to be the prompt that was used with these original settings
-        original_prompt_for_display = state.get("original_user_prompt", "") # Keep original for display
+    
+    logger.info(f"Regen triggered. Parsed settings for initiate: {parsed_settings_for_initiate}")
+    logger.info(f"Prompt for regen API call: '{original_prompt_for_regen[:100]}...'")
+
 
     # --- Initiate Generation ---
     # Reminder: Use new line, not semicolon, for the following block/statement.
     try:
         await _initiate_image_generation(
             update=None, context=context, query=query,
-            user_prompt=original_prompt_for_regen, # Use original prompt
-            parsed_settings_data=parsed_settings_for_initiate, # Use original parsed/random flags
-            original_prompt_for_display=original_prompt_for_display # Display original prompt
+            user_prompt=original_prompt_for_regen,
+            parsed_settings_data=parsed_settings_for_initiate,
+            original_prompt_for_display=original_prompt_for_display,
+            base_image_bytes=base_image_bytes_for_api,       # This will be img1 for combo, or single base, or None
+            user_image_bytes=user_image_bytes_for_api,      # This will be img2 for combo, or None
+            user_uploaded_base_image_file_id=single_base_file_id_to_pass, # Pass original single upload ID
+            source_image_file_id_1_for_passthrough=source_1_file_id_to_pass, # Pass original combo ID 1
+            source_image_file_id_2_for_passthrough=source_2_file_id_to_pass  # Pass original combo ID 2
         )
     # Reminder: Use new line, not semicolon, for the following block/statement.
     except Exception as e:

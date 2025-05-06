@@ -194,11 +194,12 @@ async def send_image_generation_response(
     api_image_bytes: Optional[bytes],
     api_error_message: Optional[str],
     original_user_prompt: str,
-    # These are the RESOLVED settings and indices AFTER _resolve_settings
     resolved_settings_tuple: Tuple[Dict[str, Any], int | None, int | None, int | None],
     prompt_used_for_api: Optional[str] = None,
-    # This is the RAW parsed data BEFORE _resolve_settings
-    original_parsed_settings_data: Optional[Dict[str, Any]] = None
+    original_parsed_settings_data: Optional[Dict[str, Any]] = None,
+    base_image_file_id_for_regen: Optional[str] = None, # For single user-uploaded base
+    source_image_file_id_1_for_regen: Optional[str] = None, # For combined image source 1
+    source_image_file_id_2_for_regen: Optional[str] = None  # For combined image source 2
 ):
     sent_message = None
     final_caption_or_text = ""
@@ -240,7 +241,11 @@ async def send_image_generation_response(
         # Store ORIGINAL PARSED settings for Re-Gen
         "original_parsed_settings": original_parsed_settings_data,
         # Placeholder for file_id
-        "generated_file_id": None
+        "generated_file_id": None,
+        "base_image_file_id_for_regen": base_image_file_id_for_regen, # For single base image
+        "source_image_file_id_1_for_regen": source_image_file_id_1_for_regen, # <<< ADD THIS
+        "source_image_file_id_2_for_regen": source_image_file_id_2_for_regen, # <<< ADD THIS
+        "is_combination_result": bool(source_image_file_id_1_for_regen and source_image_file_id_2_for_regen)
     }
     logger.debug(f"Initial state built in sender (before file_id): {initial_state}")
 

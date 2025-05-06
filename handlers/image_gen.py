@@ -36,10 +36,11 @@ from config import (
     STYLE_NAME_TO_ABSOLUTE_INDEX, ALL_ARTISTS_DATA, ARTIST_ALIAS_TO_NAME,
     ARTIST_NAME_TO_DATA, ARTIST_NAME_TO_ABSOLUTE_INDEX, DEFAULT_COMBINE_PROMPT_TEXT,
     DEFAULT_IMAGE_PROMPT_SUFFIX, ARTIST_SHORT_ALIAS_TO_NAME,
-    STYLE_GROUP_ALIASES
+    STYLE_GROUP_ALIASES, DEFAULT_COMBINE_PROMPT_TEXT
 )
 import config
-from ui.messages import update_caption_and_keyboard # Import needed for reply handler
+from ui.messages import update_caption_and_keyboard, send_image_generation_response
+
 from utils.decorators import restrict_private_unauthorized
 
 
@@ -599,7 +600,11 @@ def _resolve_settings(parsed_settings_data: Dict[str, Any]) -> Tuple[Dict[str, A
 async def _initiate_image_generation(
     update: Optional[Update], context: ContextTypes.DEFAULT_TYPE, query: Optional[CallbackQuery],
     user_prompt: str, parsed_settings_data: Dict[str, Any], original_prompt_for_display: str,
-    base_image_bytes: Optional[bytes] = None, user_image_bytes: Optional[bytes] = None
+    base_image_bytes: Optional[bytes] = None, user_image_bytes: Optional[bytes] = None, # user_image_bytes is for direct combination, not typically used by /img
+    user_uploaded_base_image_file_id: Optional[str] = None, # For Re-Gen to remember initial single user upload
+    # Add parameters for passing through combination source file IDs
+    source_image_file_id_1_for_passthrough: Optional[str] = None,
+    source_image_file_id_2_for_passthrough: Optional[str] = None
 ):
     chat, user, reply_to_msg_id, source_message = _determine_context(update, query)
     # Reminder: Use new line, not semicolon, for the following block/statement.
@@ -632,7 +637,9 @@ async def _initiate_image_generation(
         original_prompt_for_display, # The initial user prompt OR auto-description
         resolved_settings_tuple, # Tuple of (resolved_dict, type_idx, style_idx, artist_idx)
         final_api_prompt,
-        original_parsed_settings_data=parsed_settings_data # Pass original parsed args
+        original_parsed_settings_data=parsed_settings_data, # Pass original parsed args
+        base_image_file_id_for_regen=user_uploaded_base_image_file_id
+    
     )
 # ================================== _initiate_image_generation() end ==================================
 
@@ -704,7 +711,8 @@ async def _initiate_image_editing(
         original_user_prompt, # Display original prompt
         resolved_settings_tuple, # The settings used for this edit
         final_edit_prompt, # API prompt used
-        original_parsed_settings_data=original_parsed_settings_for_state # Mark as None for edit results
+        original_parsed_settings_data=original_parsed_settings_for_state, # Mark as None for edit results
+        base_image_file_id_for_regen=None
     )
 # ================================== _initiate_image_editing() end ==================================
 
@@ -712,21 +720,57 @@ async def _initiate_image_editing(
 # ================================== _initiate_image_combination(): For combining two images ==================================
 async def _initiate_image_combination(
     context: ContextTypes.DEFAULT_TYPE, base_image_bytes: bytes, user_image_bytes: bytes,
-    user_prompt: str, chat_id: int, user_id: int, user_mention: str, reply_to_msg_id: int, source_message: Message
+    user_prompt: str, chat_id: int, user_id: int, user_mention: str, reply_to_msg_id: int, source_message: Message,
+    original_file_id_1: str, original_file_id_2: str # <<< ADD THESE
 ):
     chat = source_message.chat
     processing_msg = await _send_processing_message(context, chat, source_message, user_mention, "комбинирую изображения")
     final_api_prompt = user_prompt
     logger.info(f"API prompt (Combine): '{final_api_prompt[:200]}...'")
-    api_text, api_img, api_err = await generate_image_with_gemini(final_api_prompt, base_image_bytes, user_image_bytes)
-    final_settings_for_state = {"type_data": None, "style_data": None, "artist_data": None, "ar": None, "type_index": None, "style_abs_index": None, "artist_abs_index": None}
-    await send_image_generation_response(
-        context, chat_id, reply_to_msg_id, processing_msg.message_id if processing_msg else None,
-        api_text, api_img, api_err, user_prompt if user_prompt != DEFAULT_COMBINE_PROMPT_TEXT else "",
-        (final_settings_for_state, None, None, None), # Pass as tuple
-        final_api_prompt,
-        original_parsed_settings_data=None # No original parsed settings for combine
+
+    # generate_image_with_gemini already accepts two images
+    api_text, api_img, api_err = await generate_image_with_gemini(
+        prompt=final_api_prompt,
+        input_image_original=base_image_bytes, # First image
+        input_image_user=user_image_bytes      # Second image
     )
+
+    # For combined images, the "settings" are effectively null as it's a direct operation
+    final_settings_for_state = {"type_data": None, "style_data": None, "artist_data": None, "ar": None}
+    
+    await send_image_generation_response(
+        context=context,
+        chat_id=chat_id,
+        reply_to_message_id=reply_to_msg_id,
+        processing_msg_id=processing_msg.message_id if processing_msg else None,
+        api_text_result=api_text,
+        api_image_bytes=api_img,
+        api_error_message=api_err,
+        
+        # The original user prompt for display is the prompt they provided,
+        # unless it was the default combine text, in which case we display empty.
+        original_user_prompt=user_prompt if user_prompt != DEFAULT_COMBINE_PROMPT_TEXT else "", 
+        
+        # Pass the resolved settings tuple (all None for combination)
+        resolved_settings_tuple=(final_settings_for_state, None, None, None),
+        
+        # Pass the actual prompt sent to the API
+        prompt_used_for_api=final_api_prompt,
+        
+        # No specific parsed arguments for a combination result
+        original_parsed_settings_data=None, 
+        
+        # Pass the file IDs of the two source images for the Re-Gen logic
+        # These are the file_ids of the images that were input to this combination.
+        # This is how _handle_regen will know which images to re-fetch.
+        source_image_file_id_1_for_regen=original_file_id_1, # <<< Pass the first source image ID
+        source_image_file_id_2_for_regen=original_file_id_2  # <<< Pass the second source image ID
+        
+        # base_image_file_id_for_regen remains None for a combination result,
+        # as it doesn't stem from a *single* base image in the same way
+        # as an edit or a photo-with-caption generation.
+    )
+
 # ================================== _initiate_image_combination() end ==================================
 
 
@@ -889,9 +933,7 @@ async def handle_image_with_caption(update: Update, context: ContextTypes.DEFAUL
             original_prompt_for_display = description.strip() # Use description for display too
             logger.info(f"Auto-description successful. Using as prompt: '{api_prompt_to_use[:100]}...'")
             # Reminder: Use new line, not semicolon, for the following block/statement.
-            try: await message.reply_html(f"ℹ️ Использовано авто-описание как промпт:\n<pre>{escape(api_prompt_to_use)}</pre>")
-            # Reminder: Use new line, not semicolon, for the following block/statement.
-            except Exception as reply_err: logger.warning(f"Failed to send auto-description info message: {reply_err}")
+            pass
         else:
             # Fallback if description fails
             fallback_api_prompt = "redraw with specified style"
@@ -899,9 +941,7 @@ async def handle_image_with_caption(update: Update, context: ContextTypes.DEFAUL
             original_prompt_for_display = "" # FIX: Use empty string, not flags
             logger.warning(f"Auto-description failed ({desc_error}). Falling back to API prompt: '{fallback_api_prompt}', display prompt: ''")
             # Reminder: Use new line, not semicolon, for the following block/statement.
-            try: await message.reply_text(f"⚠️ Не удалось описать фото ({desc_error}). Использую стандартный промпт для флагов.")
-            # Reminder: Use new line, not semicolon, for the following block/statement.
-            except Exception as reply_err: logger.warning(f"Failed to send description fallback info message: {reply_err}")
+            pass
 
     elif user_prompt:
         # If there was a prompt, display only the prompt part, not the flags
@@ -920,7 +960,8 @@ async def handle_image_with_caption(update: Update, context: ContextTypes.DEFAUL
         user_prompt=api_prompt_to_use, # Use the determined prompt for API
         parsed_settings_data=parsed_settings_data,
         original_prompt_for_display=original_prompt_for_display, # Show original text or description
-        base_image_bytes=image_bytes # Pass the downloaded image bytes
+        base_image_bytes=image_bytes, # Pass the downloaded image bytes
+        user_uploaded_base_image_file_id=file_id # Pass the file_id of the user's uploaded image
     )
 # ================================== handle_image_with_caption() end ==================================
 
@@ -978,12 +1019,18 @@ async def handle_photo_reply_to_image(update: Update, context: ContextTypes.DEFA
          img_bytes_user = None
      # Reminder: Use new line, not semicolon, for the following block/statement.
      if not img_bytes_original or not img_bytes_user:
-         await message.reply_text("❌ Ошибка загрузки одного/обоих изображений.")
-         return
-     await _initiate_image_combination(
-         context=context, base_image_bytes=img_bytes_original, user_image_bytes=img_bytes_user,
-         user_prompt=user_prompt, chat_id=chat.id, user_id=user.id, user_mention=user.mention_html(),
-         reply_to_msg_id=message.message_id, source_message=message
+         await _initiate_image_combination(
+         context=context, 
+         base_image_bytes=img_bytes_original, # Bytes of the first image
+         user_image_bytes=img_bytes_user,      # Bytes of the second image
+         user_prompt=user_prompt, 
+         chat_id=chat.id, 
+         user_id=user.id, 
+         user_mention=user.mention_html(),
+         reply_to_msg_id=message.message_id, 
+         source_message=message,
+         original_file_id_1=original_file_id, # <<< Pass the file ID of the bot's original photo
+         original_file_id_2=user_file_id      # <<< Pass the file ID of the user's reply photo
      )
 # ================================== handle_photo_reply_to_image() end ==================================
 
