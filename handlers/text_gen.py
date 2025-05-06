@@ -172,8 +172,16 @@ async def handle_text_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "style": parsed_reply_args["style"] if parsed_reply_args.get("style") else current_settings_base["style_data"],
             "artist": parsed_reply_args["artist"] if parsed_reply_args.get("artist") else current_settings_base["artist_data"],
             "ar": parsed_reply_args["ar"] if parsed_reply_args.get("ar") else current_settings_base["ar"],
-            "randomize_type": parsed_reply_args["randomize_type"], "randomize_style": parsed_reply_args["randomize_style"],
-            "randomize_artist": parsed_reply_args["randomize_artist"], "style_marker": parsed_reply_args["style_marker"]
+            
+            "randomize_type": parsed_reply_args.get("randomize_type", False),
+            "randomize_style": parsed_reply_args.get("randomize_style", False),
+            "randomize_artist": parsed_reply_args.get("randomize_artist", False),
+            
+            "style_marker": parsed_reply_args.get("style_marker"),
+
+            "type_choice_list": parsed_reply_args.get("type_choice_list"),
+            "style_choice_list": parsed_reply_args.get("style_choice_list"),
+            "artist_choice_list": parsed_reply_args.get("artist_choice_list"),
         }
 
         logger.debug(f"Settings BEFORE resolve for reply edit: {current_settings_for_resolve}")
