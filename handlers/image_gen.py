@@ -138,38 +138,59 @@ def parse_img_args_prompt_first(full_text: str) -> Tuple[str, Dict[str, Any]]:
     # --- End of Special Case 1 ---
 
     # --- SPECIAL CASE 2: Handling for -t(list), -s(list), -a(list) ---
+    # Corrected patterns to look for the right flags
     list_patterns = {
-        'type': r'(-t\s*\(\s*(\d+(?:\s*,\s*\d+)*)\s*\))',
-        'style': r'(-s\s*\(\s*(\d+(?:\s*,\s*\d+)*)\s*\))',
-        'artist': r'(-a\s*\(\s*(\d+(?:\s*,\s*\d+)*)\s*\))',
+        'type': r'-t\s*\(\s*(\d+(?:\s*,\s*\d+)*)\s*\)',
+        'style': r'-s\s*\(\s*(\d+(?:\s*,\s*\d+)*)\s*\)',   # Corrected to -s
+        'artist': r'-a\s*\(\s*(\d+(?:\s*,\s*\d+)*)\s*\)', # Corrected to -a
     }
+
+    # For dynamic creation if you prefer (alternative to above)
+    # flags_chars = {'type': 't', 'style': 's', 'artist': 'a'}
+    # list_patterns = {
+    #     key: rf'-{char}\s*\(\s*(\d+(?:\s*,\s*\d+)*)\s*\)'
+    #     for key, char in flags_chars.items()
+    # }
+
     for key, pattern in list_patterns.items():
-        # Reminder: Use new line, not semicolon, for the following block/statement.
-        if f'-{key[0]}' in processed_pre_flags: continue # Skip if already handled by case 1
-        # Reminder: Use new line, not semicolon, for the following block/statement.
+        if f'-{key[0]}' in processed_pre_flags: # Check if the simple flag (e.g., -t) was already handled
+            continue
+
         try:
+            # Use re.search to find the pattern anywhere in args_part
             list_match = re.search(pattern, args_part, re.IGNORECASE)
-            # Reminder: Use new line, not semicolon, for the following block/statement.
+
             if list_match:
-                matched_segment = list_match.group(1) # Full e.g., "-t(1, 2,3)"
-                index_str = list_match.group(2) # Just "1, 2,3"
-                logger.debug(f"Found list pattern for {key}: {matched_segment}")
-                args_part = args_part.replace(matched_segment, " ", 1) # Remove segment
-                # Reminder: Use new line, not semicolon, for the following block/statement.
+                # group(0) is the entire matched segment, e.g., "-t(1,2,3)" or "-s(5)"
+                full_matched_segment = list_match.group(0)
+                # group(1) is the string of numbers inside the parentheses, e.g., "1,2,3" or "5"
+                indices_str = list_match.group(1)
+
+                logger.debug(f"Found list pattern for {key}: '{full_matched_segment}', extracting indices: '{indices_str}'")
+
+                # Remove the entire processed segment from args_part
+                args_part = args_part.replace(full_matched_segment, " ", 1)
+                logger.debug(f"args_part after removing '{full_matched_segment}': '{args_part}'")
+
                 try:
-                    indices = [int(x.strip()) for x in index_str.split(',') if x.strip()]
-                    # Reminder: Use new line, not semicolon, for the following block/statement.
+                    # Split the string of numbers by comma, strip whitespace, and convert to int
+                    # Filter out empty strings that might result from "1,,2" or trailing commas if not handled by regex
+                    indices = [int(x.strip()) for x in indices_str.split(',') if x.strip()]
+
                     if indices:
                         parsed_settings_data[f"{key}_choice_list"] = indices
-                        processed_pre_flags.add(f'-{key[0]}') # Mark base flag handled
+                        # Mark the base flag (e.g., -t, -s, -a) as handled to avoid double processing
+                        # if you have other logic that handles simple flags like -t without a list.
+                        processed_pre_flags.add(f'-{key[0].lower()}') # Use lower() if IGNORECASE can lead to -T
                         logger.debug(f"Parsed {key} choice list: {indices}")
-                    else: logger.warning(f"Empty or invalid index list for {key}: '{index_str}'")
-                # Reminder: Use new line, not semicolon, for the following block/statement.
-                except ValueError: logger.warning(f"Invalid numbers in index list for {key}: '{index_str}'")
-                # Reminder: Use new line, not semicolon, for the following block/statement.
-                except Exception as e_list: logger.error(f"Error processing {key} list: {e_list}")
-        # Reminder: Use new line, not semicolon, for the following block/statement.
-        except re.error as e_re_list: logger.error(f"Regex error searching for {key} list: {e_re_list}")
+                    else:
+                        logger.warning(f"Empty or invalid index list for {key} from string: '{indices_str}'")
+                except ValueError:
+                    logger.warning(f"Invalid numbers in index list for {key}: '{indices_str}'")
+                except Exception as e_list:
+                    logger.error(f"Error processing {key} list ('{indices_str}'): {e_list}")
+        except re.error as e_re_list:
+            logger.error(f"Regex error searching for {key} list with pattern '{pattern}': {e_re_list}")
     # --- End of Special Case 2 ---
 
     # --- Iterative Parsing of REMAINING args_part ---
