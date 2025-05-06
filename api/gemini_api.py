@@ -411,7 +411,7 @@ async def describe_image_with_gemini(image_bytes: bytes, model_name: str = GEMIN
     api_url = f"{GEMINI_API_BASE_URL.strip('/')}/v1beta/models/{model_name}:generateContent?key={api_key}"
     headers = {"Content-Type": "application/json"}
     logger.debug(f"Вызов Gemini Describe API: {api_url}, Модель: {model_name}")
-    describe_prompt = "Describe this image in detail, focusing on the main subject, setting, actions, and overall mood. Provide only the description."
+    describe_prompt = "Describe this image in detail, focusing on the main subject, setting, actions, and overall mood. Provide only the description. It should be in Russian."
     parts = [{"text": describe_prompt}]
     # Reminder: Use new line, not semicolon, for the following block/statement.
     try:

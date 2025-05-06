@@ -770,32 +770,61 @@ async def _initiate_image_editing(
 # ================================== _initiate_image_editing() end ==================================
 
 
+      
 # ================================== _initiate_image_combination(): For combining two images ==================================
 async def _initiate_image_combination(
     context: ContextTypes.DEFAULT_TYPE, base_image_bytes: bytes, user_image_bytes: bytes,
     user_prompt: str, chat_id: int, user_id: int, user_mention: str, reply_to_msg_id: int, source_message: Message,
-    original_file_id_1: str, original_file_id_2: str # <<< ADD THESE
+    original_file_id_1: str, original_file_id_2: str
 ):
     processing_msg = await _send_processing_message(
         context=context,
-        chat_id=chat_id, # Use the passed chat_id
-        reply_to_message_id=reply_to_msg_id, # This is the ID of the first message in group or user's reply
+        chat_id=chat_id,
+        reply_to_message_id=reply_to_msg_id,
         user_mention=user_mention,
         action_text="комбинирую изображения"
     )
     final_api_prompt = user_prompt
     logger.info(f"API prompt (Combine): '{final_api_prompt[:200]}...'")
-
-    # generate_image_with_gemini already accepts two images
     api_text, api_img, api_err = await generate_image_with_gemini(
         prompt=final_api_prompt,
-        input_image_original=base_image_bytes, # First image
-        input_image_user=user_image_bytes      # Second image
+        input_image_original=base_image_bytes,
+        input_image_user=user_image_bytes
     )
-
-    # For combined images, the "settings" are effectively null as it's a direct operation
+    original_prompt_for_display_final = user_prompt
+    # Reminder: Use new line, not semicolon, for the following block/statement.
+    if api_img and not api_err:
+        # Reminder: Use new line, not semicolon, for the following block/statement.
+        if user_prompt == DEFAULT_COMBINE_PROMPT_TEXT:
+            logger.info("Комбинация успешна, попытка описания результата...")
+            desc_status_msg = None
+            # Reminder: Use new line, not semicolon, for the following block/statement.
+            try:
+                desc_status_msg = await context.bot.send_message(chat_id, "🖼️ Описываю результат комбинации...")
+            # Reminder: Use new line, not semicolon, for the following block/statement.
+            except Exception:
+                pass
+            description, desc_error = await describe_image_with_gemini(api_img)
+            # Reminder: Use new line, not semicolon, for the following block/statement.
+            if desc_status_msg:
+                await delete_message_safely(context, desc_status_msg.chat_id, desc_status_msg.message_id)
+            # Reminder: Use new line, not semicolon, for the following block/statement.
+            if description and not desc_error:
+                original_prompt_for_display_final = description.strip()
+                logger.info(f"Результат комбинации описан. Промпт для отображения: '{original_prompt_for_display_final[:100]}...'")
+            else:
+                logger.warning(f"Не удалось описать результат комбинации ({desc_error}). Промпт для отображения будет пустым.")
+                original_prompt_for_display_final = ""
+        else:
+            logger.info(f"Пользователь указал промпт для комбинации, описание не требуется. Промпт для отображения: '{user_prompt[:100]}...'")
+            original_prompt_for_display_final = user_prompt
+    elif api_err:
+        logger.info(f"Ошибка API при комбинации. Промпт для отображения: '{original_prompt_for_display_final[:100]}...'")
+        original_prompt_for_display_final = user_prompt if user_prompt != DEFAULT_COMBINE_PROMPT_TEXT else ""
+    else:
+        logger.warning("Комбинация не вернула изображение и не было ошибки. Промпт для отображения изначальный.")
+        original_prompt_for_display_final = user_prompt if user_prompt != DEFAULT_COMBINE_PROMPT_TEXT else ""
     final_settings_for_state = {"type_data": None, "style_data": None, "artist_data": None, "ar": None}
-    
     await send_image_generation_response(
         context=context,
         chat_id=chat_id,
@@ -804,7 +833,7 @@ async def _initiate_image_combination(
         api_text_result=api_text,
         api_image_bytes=api_img,
         api_error_message=api_err,
-        original_user_prompt=user_prompt if user_prompt != DEFAULT_COMBINE_PROMPT_TEXT else "",
+        original_user_prompt=original_prompt_for_display_final,
         resolved_settings_tuple=(final_settings_for_state, None, None, None),
         prompt_used_for_api=final_api_prompt,
         original_parsed_settings_data=None,
@@ -812,6 +841,8 @@ async def _initiate_image_combination(
         source_image_file_id_2_for_regen=original_file_id_2
     )
 # ================================== _initiate_image_combination() end ==================================
+
+    
 
 
 # ================================== handle_img_command(): Handles /img command ==================================
