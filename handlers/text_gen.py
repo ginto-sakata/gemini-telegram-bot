@@ -214,6 +214,10 @@ async def handle_private_text(update: Update, context: ContextTypes.DEFAULT_TYPE
     if not message or not message.text:
         return
 
+    # Only allow plain text generation in PRIVATE CHATS
+    if message.chat.type != ChatType.PRIVATE:
+        return
+
     user_prompt = message.text.strip()
     if not user_prompt:
         return
@@ -222,9 +226,41 @@ async def handle_private_text(update: Update, context: ContextTypes.DEFAULT_TYPE
     if message.reply_to_message and message.reply_to_message.from_user.id == context.bot.id:
         return
 
-    # Proceed with text generation
+    text = message.text.strip()
+
+    # Check for /ask
+    if text.startswith("/ask"):
+        args = text[len("/ask"):].strip()
+        await handle_ask_command_with_args(update, context, args)
+        return
+
+    # Check for ? shortcut
+    ask_match = re.match(r"^\?\s*(.+)", text, re.DOTALL)
+    if ask_match:
+        user_prompt = ask_match.group(1).strip()
+        await process_text_generation_request(update, context, user_prompt)
+        return
+
+    # Block messages starting with commands like !, !!, /img, /man, etc.
+    if re.match(
+        r"^(!|!!|/img|/help|/start|/clear|/history|/prompt|/toggle_llm|/types|/artists|/styles|/man)",
+        text
+    ):
+        return
+
+    # If none of the above, treat as normal text input (private chat only)
     await process_text_generation_request(update, context, user_prompt)
 # ================================== handle_private_text() end ==================================
+
+async def handle_ask_command_with_args(update: Update, context: ContextTypes.DEFAULT_TYPE, user_prompt: str):
+    if not await is_authorized(update, context):
+        return
+    if not update.message or not update.effective_user or not update.effective_chat:
+        return
+    if not user_prompt:
+        await update.message.reply_text("⚠️ Укажите вопрос.")
+        return
+    await process_text_generation_request(update, context, user_prompt)
     
 
 # handlers/text_gen.py end
