@@ -3,7 +3,7 @@
 
 # Default suffix appended to image generation prompts (used by /prompt command)
 # Set to "" if you don't want any default suffix.
-default_image_prompt_suffix: "also add a small tiny little pink piggy in the image."
+default_image_prompt_suffix: "reply in Russian."
 
 # Default system prompt for text generation (used by /reset command)
 default_text_system_prompt: "Ты - полезный помощник"
